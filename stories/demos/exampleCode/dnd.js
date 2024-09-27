@@ -56,7 +56,8 @@ export default function DragAndDrop({ localizer }) {
       <div className="height600">
         <DragAndDropCalendar
           defaultDate={defaultDate}
-          defaultView={Views.DAY}
+          defaultView={Views.MONTH}
+          selectable={true}
           events={myEvents}
           localizer={localizer}
           onEventDrop={moveEvent}

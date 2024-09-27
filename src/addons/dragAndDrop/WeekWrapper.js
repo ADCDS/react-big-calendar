@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import EventRow from '../../EventRow'
-import Selection, { getBoundsForNode } from '../../Selection'
+import Selection, { getBoundsForNode, getEventNodeFromPoint } from '../../Selection'
 import { eventSegments } from '../../utils/eventLevels'
 import { getSlotAtX, pointInBox } from '../../utils/selection'
 import { dragAccessors, eventTimes } from './common'
@@ -72,28 +72,10 @@ class WeekWrapper extends React.Component {
     let { start, duration } = eventTimes(event, accessors, localizer)
     start = localizer.merge(date, start)
     const end = localizer.add(start, duration, 'milliseconds')
-    // LATER: when dragging a multi-row event, only the first row is animating
+    // Update the event preview
     this.update(event, start, end)
-  }
 
-  handleDropFromOutside = (point, bounds) => {
-    if (!this.context.draggable.onDropFromOutside) return
-    const { slotMetrics, rtl, localizer } = this.props
-
-    const slot = getSlotAtX(bounds, point.x, rtl, slotMetrics.slots)
-    const start = slotMetrics.getDateForSlot(slot)
-
-    this.context.draggable.onDropFromOutside({
-      start,
-      end: localizer.add(start, 1, 'day'),
-      allDay: false,
-    })
-  }
-
-  handleDragOverFromOutside = (point, node) => {
-    const item = this.context.draggable.dragFromOutsideItem ? this.context.draggable.dragFromOutsideItem() : null
-    if (!item) return
-    this.handleMove(point, node, item)
+    return event
   }
 
   handleResize(point, bounds) {
@@ -147,41 +129,108 @@ class WeekWrapper extends React.Component {
     }
 
     this.update(event, start, end)
+    return event
   }
 
   _selectable = () => {
+    console.log('______SELECTABLE in WeekWrapper')
+    let isBeingDragged = false
     let node = this.ref.current.closest('.rbc-month-row, .rbc-allday-cell')
     let container = node.closest('.rbc-month-view, .rbc-time-view')
     let isMonthRow = node.classList.contains('rbc-month-row')
 
     // Valid container check only necessary in TimeGrid views
-    let selector = (this._selector = new Selection(() => container, {
-      validContainers: [
-        ...(!isMonthRow ? ['.rbc-day-slot', '.rbc-allday-cell'] : []),
-      ],
-    }))
+    let selector = (this._selector = new Selection(
+      () => container,
+      {
+        validContainers: [
+          ...(!isMonthRow ? ['.rbc-day-slot', '.rbc-allday-cell'] : []),
+        ],
+      },
+      this.context
+    ))
 
-    selector.on('beforeSelect', (point) => {
+    selector.on('beforeSelect', (point, e) => {
       const { isAllDay } = this.props
       const { action } = this.context.draggable.dragAndDropAction
       const bounds = getBoundsForNode(node)
       const isInBox = pointInBox(bounds, point)
-      return (
-        action === 'move' || (action === 'resize' && (!isAllDay || isInBox))
-      )
+
+      if (this.context.draggable.dragAndDropAction.event) {
+        // Already selecting an event
+        return false
+      }
+
+      if (!pointInBox(bounds, point)) return false
+
+      const eventNode = getEventNodeFromPoint(node, point)
+      if (!eventNode) return false
+
+      // Get the event ID from the eventNode
+      let eventIdFromNode = eventNode.dataset.eventId
+
+      // Get the events from children
+      const allEvents = this.props.children[0]
+
+      for (const child of allEvents) {
+        if(child.props.segments && Array.isArray(child.props.segments)) {
+          for (const segment of child.props.segments) {
+            let evtProp = segment.event
+            if (String(evtProp.id) === eventIdFromNode) {
+              this.context.draggable.onStart()
+
+              const isResizeHandle = e.target
+                .getAttribute('class')
+                ?.includes('rbc-addons-dnd-resize')
+              if (!isResizeHandle) {
+                isBeingDragged = true
+                this.context.draggable.onBeginAction(evtProp, 'move')
+              } else {
+                isBeingDragged = true
+
+                let anchorDirection = e.target.dataset.anchorDirection
+                if (!anchorDirection) {
+                  anchorDirection = e.target.parentNode.dataset.anchorDirection
+                }
+
+                this.context.draggable.onBeginAction(
+                  evtProp,
+                  'resize',
+                  anchorDirection.toUpperCase()
+                )
+              }
+              break
+            }
+          }
+        }
+      }
+
+      return true
     })
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
-      if (dragAndDropAction.action === 'move') this.handleMove(box, bounds)
-      if (dragAndDropAction.action === 'resize') this.handleResize(box, bounds)
+
+      console.log('selecting', { box, dragAndDropAction })
+
+      if (dragAndDropAction.action === 'move') {
+        return this.handleMove(box, bounds)
+      }
+      if (dragAndDropAction.action === 'resize') {
+        return this.handleResize(box, bounds)
+      }
     })
 
-    selector.on('selectStart', () => this.context.draggable.onStart())
+    selector.on('selectStart', () => {
+      isBeingDragged = true
+      this.context.draggable.onStart()
+    })
 
     selector.on('select', (point) => {
       const bounds = getBoundsForNode(node)
+      isBeingDragged = false
+      const { dragAndDropAction } = this.context.draggable
       if (!this.state.segment) return
       if (!pointInBox(bounds, point)) {
         this.reset()
@@ -198,13 +247,26 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('dragOverFromOutside', (point) => {
-      if (!this.context.draggable.dragFromOutsideItem) return
+      const item = this.context.draggable.dragFromOutsideItem
+        ? this.context.draggable.dragFromOutsideItem()
+        : null
+      if (!item) return
       const bounds = getBoundsForNode(node)
 
       this.handleDragOverFromOutside(point, bounds)
     })
 
-    selector.on('click', () => this.context.draggable.onEnd(null))
+    selector.on('endMove', () => {
+      console.log("week state", {state: this.state, context: this.context});
+
+      this.context.draggable.onEnd(this.state.segment.event)
+      this.reset()
+    })
+
+    selector.on('click', () => {
+      if (isBeingDragged) this.reset()
+      this.context.draggable.onEnd(null)
+    })
 
     selector.on('reset', () => {
       this.reset()
@@ -236,6 +298,8 @@ class WeekWrapper extends React.Component {
     const { children, accessors } = this.props
 
     let { segment } = this.state
+
+    console.log({ segment })
 
     return (
       <div ref={this.ref} className="rbc-addons-dnd-row-body">

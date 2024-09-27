@@ -119,6 +119,7 @@ class Selection {
     this._initialEventData = null
     this._selectRect = null
     this._onlyTouch = false
+    this._currentCalendarEvent = null
     this.selecting = false
     this._lastClickData = null
     this.isDetached = true
@@ -203,6 +204,7 @@ class Selection {
 
     const removeMouseDownListener = addEventListener('mousedown', (e) => {
       if (!this._onlyTouch) {
+        this._removeInitialEventListener()
         this._handleInitialEvent(e)
         this._removeInitialEventListener = addEventListener(
           'mousedown',
@@ -223,6 +225,7 @@ class Selection {
     })
 
     addEventListener('touchend', (e) => {
+      this._currentCalendarEvent = null;
       this.emit('endMove')
     })
 
@@ -309,31 +312,43 @@ class Selection {
       e
     )
 
-    console.log({ touch })
+    this._currentCalendarEvent = result.event;
+    if (result.event) { // We touched an event
+      // prevent clicking event
+      e.preventDefault()
+
+      // Stop propagation: We do not want to select a timecell while touch an event
+      e.stopImmediatePropagation();
+    }
+
     if (touch) {
       this.emit('selectStart', this._initialEventData)
     }
-
-    console.log({ result, pageX, pageY, clientX, clientY, type: e.type })
-
-    if (result === false) return
 
     switch (e.type) {
       case 'mousedown':
         this._removeEndListener = addEventListener(
           'mouseup',
-          () => this.emit('endMove')
+          () => {
+            this._currentCalendarEvent = null;
+            this.emit('endMove')
+          }
         )
         this._onEscListener = addEventListener(
           'keydown',
-          () => this.emit('endMove')
+          () => {
+            this._currentCalendarEvent = null;
+            this.emit('endMove')
+          }
         )
         this._removeMoveListener = addEventListener(
           'mousemove',
-          this._handleMoveEvent
+          (e) => {
+            if (!this._onlyTouch) {
+              this._handleMoveEvent(e)
+            }
+          }
         )
-        break
-      case 'touchstart':
         break
       default:
         break
@@ -384,7 +399,7 @@ class Selection {
   }
 
   _handleMoveEvent(e) {
-    if (this._initialEventData === null || this.isDetached) {
+    if (!this._initialEventData || this.isDetached) {
       console.log('Leaving 1', {
         _initialEventData: this._initialEventData,
         isDetached: this.isDetached,
@@ -420,9 +435,14 @@ class Selection {
       }
 
       const ret = this.emit('selecting', this._selectRect)
-      if (ret) {
-        // We touched an event, prevent scrolling
+      this._currentCalendarEvent = ret?.event;
+
+      if (this._currentCalendarEvent) { // We touched an event
+        // prevent scrolling
         e.preventDefault()
+
+        // Stop propagation: We do not want to select a timecell while touch an event
+        e.stopImmediatePropagation();
       }
     }
   }

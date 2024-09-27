@@ -22,6 +22,7 @@ class DayColumn extends React.Component {
     super(...args)
 
     this.slotMetrics = TimeSlotUtils.getSlotMetrics(this.props)
+    this._selectedSlots = [];
     this.containerRef = createRef()
   }
 
@@ -352,9 +353,23 @@ class DayColumn extends React.Component {
 
     selector.on('select', (bounds) => {
       if (this.state.selecting) {
-        this._selectSlot({ ...this.state, action: 'select', bounds })
-        this.setState({ selecting: false })
+        this._selectSlot({ ...this.state, bounds })
       }
+    })
+
+    selector.on('endMove', () => {
+      const {endDate, startDate, action, bounds, box} = this.state;
+
+      this.setState({ selecting: false });
+      notify(this.props.onSelectSlot, {
+        slots: this._selectedSlots,
+        start: startDate,
+        end: endDate,
+        resourceId: this.props.resource,
+        action: 'select',
+        bounds,
+        box,
+      })
     })
 
     selector.on('reset', () => {
@@ -370,24 +385,15 @@ class DayColumn extends React.Component {
     this._selector = null
   }
 
-  _selectSlot = ({ startDate, endDate, action, bounds, box }) => {
-    let current = startDate,
-      slots = []
+  _selectSlot = ({ startDate, endDate }) => {
+    let current = startDate;
+    this._selectedSlots = []
 
+    console.log("_selectSlot", {selectedSlots: this._selectedSlots});
     while (this.props.localizer.lte(current, endDate)) {
-      slots.push(current)
+      this._selectedSlots.push(current)
       current = new Date(+current + this.props.step * 60 * 1000) // using Date ensures not to create an endless loop the day DST begins
     }
-
-    notify(this.props.onSelectSlot, {
-      slots,
-      start: startDate,
-      end: endDate,
-      resourceId: this.props.resource,
-      action,
-      bounds,
-      box,
-    })
   }
 
   _select = (...args) => {

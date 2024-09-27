@@ -186,12 +186,10 @@ class EventContainerWrapper extends React.Component {
     selector.on('beforeSelect', (point, e) => {
       if (this.context.draggable.dragAndDropAction.event) {
         // Already selecting an event
-        return false
+        return {event: this.context.draggable.dragAndDropAction.event}
       }
 
       const { dragAndDropAction } = this.context.draggable
-
-      console.log('EventContainerWrapper CTX', this.context)
 
       if (dragAndDropAction.action === 'resize') {
         return pointInColumn(getBoundsForNode(node), point)
@@ -202,9 +200,10 @@ class EventContainerWrapper extends React.Component {
 
       const events = this.props.children.props.children
       let eventIdFromNode = eventNode.dataset.eventId
-      console.log({ eventNode: eventIdFromNode, events })
+
+      let evtProp;
       for (const event of events[1]) {
-        let evtProp = event.props.event
+        evtProp = event.props.event
         if (evtProp.id === Number(eventIdFromNode)) {
           this.context.draggable.onStart()
 
@@ -239,7 +238,7 @@ class EventContainerWrapper extends React.Component {
       // placement computation in handleMove()...
       this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
-      return true
+      return {event: evtProp}
     })
 
     selector.on('selecting', (box) => {
@@ -250,11 +249,13 @@ class EventContainerWrapper extends React.Component {
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
-        return this.handleMove(box, bounds)
+        const event = this.handleMove(box, bounds)
+        return {event}
       }
       if (dragAndDropAction.action === 'resize') {
         this.updateParentScroll(parent, node)
-        return this.handleResize(box, bounds)
+        const event = this.handleResize(box, bounds)
+        return { event }
       }
     })
 
@@ -282,10 +283,12 @@ class EventContainerWrapper extends React.Component {
       if (dragAndDropAction.action === 'resize') {
         this.handleInteractionEnd()
       } else if (!this.state.event || !pointInColumn(bounds, point)) {
-        return
+        return this.state.event;
       } else {
         this.handleInteractionEnd()
       }
+
+      return this.state.event;
     })
 
     selector.on('click', () => {
