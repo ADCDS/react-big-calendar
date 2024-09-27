@@ -201,6 +201,15 @@ class Selection {
   _addInitialEventListener() {
     console.log("_addInitialEventListener call");
 
+    const removeMouseDownListener = addEventListener('mousedown', (e) => {
+      this._removeInitialEventListener()
+      this._handleInitialEvent(e)
+      this._removeInitialEventListener = addEventListener(
+        'mousedown',
+        this._handleInitialEvent
+      )
+    })
+
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
       console.log("touchstart")
       this._handleInitialEvent(e);
@@ -214,7 +223,15 @@ class Selection {
       }
     )
 
+    addEventListener(
+      'touchend',
+      (e) => {
+        this.emit('endMove')
+      }
+    )
+
     this._removeInitialEventListener = () => {
+      removeMouseDownListener()
       removeTouchStartListener()
     }
   }
@@ -436,10 +453,13 @@ class Selection {
         right: left + w,
         bottom: top + h,
       }
-      this.emit('selecting', this._selectRect)
-    }
 
-    e.preventDefault()
+      const ret = this.emit('selecting', this._selectRect)
+      if(ret) {
+        // We touched an event, prevent scrolling
+        e.preventDefault()
+      }
+    }
   }
 
   _keyListener(e) {

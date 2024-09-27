@@ -74,6 +74,8 @@ class EventContainerWrapper extends React.Component {
     const { duration } = eventTimes(event, accessors, this.props.localizer)
     let newEnd = this.props.localizer.add(newSlot, duration, 'milliseconds')
     this.update(event, slotMetrics.getRange(newSlot, newEnd, false, true))
+
+    return event;
   }
 
   handleResize(point, bounds) {
@@ -221,7 +223,7 @@ class EventContainerWrapper extends React.Component {
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
-        this.handleMove(box, bounds)
+        return this.handleMove(box, bounds)
       }
       if (dragAndDropAction.action === 'resize') {
         this.updateParentScroll(parent, node)
@@ -265,6 +267,9 @@ class EventContainerWrapper extends React.Component {
       this.reset()
       this.context.draggable.onEnd(null)
     })
+    selector.on('endMove', () => {
+      this.context.draggable.onEnd(this.state.event)
+    })
   }
 
   handleInteractionEnd = () => {
@@ -290,29 +295,45 @@ class EventContainerWrapper extends React.Component {
       this.props
 
     let { event, top, height } = this.state
-    if (!event) return children
 
     const events = children.props.children
-    const { start, end } = event
 
-    let label
-    let format = 'eventTimeRangeFormat'
+    let label,startsBeforeDay,startsAfterDay;
 
-    const startsBeforeDay = slotMetrics.startsBeforeDay(start)
-    const startsAfterDay = slotMetrics.startsAfterDay(end)
+    if(event){
+      const { start, end } = event
+      let format = 'eventTimeRangeFormat'
 
-    if (startsBeforeDay) format = 'eventTimeRangeEndFormat'
-    else if (startsAfterDay) format = 'eventTimeRangeStartFormat'
+      startsBeforeDay = slotMetrics.startsBeforeDay(start)
+      startsAfterDay = slotMetrics.startsAfterDay(end)
 
-    if (startsBeforeDay && startsAfterDay) label = localizer.messages.allDay
-    else label = localizer.format({ start, end }, format)
+      if (startsBeforeDay) format = 'eventTimeRangeEndFormat'
+      else if (startsAfterDay) format = 'eventTimeRangeStartFormat'
+
+      if (startsBeforeDay && startsAfterDay) label = localizer.messages.allDay
+      else label = localizer.format({ start, end }, format)
+    }
+
+    console.log({event});
 
     return React.cloneElement(children, {
       children: (
         <React.Fragment>
           {events}
 
-          <div>{event.id}</div>
+          {event && (
+            <TimeGridEvent
+              event={event}
+              label={label}
+              className="rbc-addons-dnd-drag-preview"
+              style={{ top, height, width: 100 }}
+              getters={getters}
+              components={components}
+              accessors={{ ...accessors, ...dragAccessors }}
+              continuesPrior={startsBeforeDay}
+              continuesAfter={startsAfterDay}
+            />
+          )}
         </React.Fragment>
       ),
     })
