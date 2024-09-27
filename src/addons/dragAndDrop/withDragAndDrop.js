@@ -104,7 +104,7 @@ export default function withDragAndDrop(Calendar) {
       this.components = mergeComponents(components, {
         eventWrapper: EventWrapper,
         eventContainerWrapper: EventContainerWrapper,
-        // weekWrapper: WeekWrapper,
+        weekWrapper: WeekWrapper,
       })
 
       const elementPropsWithDropFromOutside = this.props.onDropFromOutside

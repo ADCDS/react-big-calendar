@@ -111,10 +111,10 @@ class EventContainerWrapper extends React.Component {
       }
     }
 
-    if(newRange) {
-      this.update(event, newRange);
+    if (newRange) {
+      this.update(event, newRange)
     }
-    return event;
+    return event
   }
 
   handleDropFromOutside = (point, boundaryBox) => {
@@ -212,11 +212,21 @@ class EventContainerWrapper extends React.Component {
             .getAttribute('class')
             ?.includes('rbc-addons-dnd-resize')
           if (!isResizeHandle) {
-            isBeingDragged = true;
+            isBeingDragged = true
             this.context.draggable.onBeginAction(evtProp, 'move')
           } else {
-            isBeingDragged = true;
-            this.context.draggable.onBeginAction(evtProp, 'resize', e.target.parentNode.dataset.anchorDirection.toUpperCase())
+            isBeingDragged = true
+
+            let anchorDirection = e.target.dataset.anchorDirection
+            if (!anchorDirection) {
+              anchorDirection = e.target.parentNode.dataset.anchorDirection
+            }
+
+            this.context.draggable.onBeginAction(
+              evtProp,
+              'resize',
+              anchorDirection.toUpperCase()
+            )
           }
         }
       }
