@@ -73,6 +73,9 @@ export default function withDragAndDrop(Calendar) {
 
     handleInteractionEnd = (interactionInfo) => {
       const { action, event } = this.state
+
+      console.log(`handleInteractionEnd ${action}`)
+
       if (!action) return
 
       this.setState({
@@ -117,10 +120,9 @@ export default function withDragAndDrop(Calendar) {
         !!interacting && 'rbc-addons-dnd-is-dragging'
       )
 
-
       const context = this.getDnDContextValue()
 
-      console.log("withDnD render", {context});
+      console.log('withDnD render', { context })
       return (
         <DnDContext.Provider value={context}>
           <Calendar

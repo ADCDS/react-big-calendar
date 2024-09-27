@@ -22,34 +22,6 @@ class EventWrapper extends React.Component {
     resizable: PropTypes.bool,
   }
 
-  handleResizeUp = (e) => {
-    if (e.button !== 0) return
-    this.context.draggable.onBeginAction(this.props.event, 'resize', 'UP')
-  }
-  handleResizeDown = (e) => {
-    if (e.button !== 0) return
-    this.context.draggable.onBeginAction(this.props.event, 'resize', 'DOWN')
-  }
-  handleResizeLeft = (e) => {
-    if (e.button !== 0) return
-    this.context.draggable.onBeginAction(this.props.event, 'resize', 'LEFT')
-  }
-  handleResizeRight = (e) => {
-    if (e.button !== 0) return
-    this.context.draggable.onBeginAction(this.props.event, 'resize', 'RIGHT')
-  }
-
-  handleStopDragging = (e) => {
-    e.preventDefault();
-
-    this.context.draggable.onEnd()
-  }
-
-  handleStartDragging = (e) => {
-    this.context.draggable.onStart()
-    this.context.draggable.onBeginAction(this.props.event, 'move')
-  }
-
   renderAnchor(direction) {
     const cls = direction === 'Up' || direction === 'Down' ? 'ns' : 'ew'
     return (
@@ -63,13 +35,16 @@ class EventWrapper extends React.Component {
   }
 
   render() {
+    const { draggable } = this.context
+
+    console.log('###EVENT_WRAPPER_RENDER', { draggable })
     const { event, type, continuesPrior, continuesAfter, resizable } =
       this.props
 
     let { children } = this.props
 
     const newProps = {
-      'data-event-id': `${event.id}`
+      'data-event-id': `${event.id}`,
     }
 
     if (event.__isPreview)
@@ -80,7 +55,6 @@ class EventWrapper extends React.Component {
         ),
       })
 
-    const { draggable } = this.context
     const { draggableAccessor, resizableAccessor } = draggable
 
     const isDraggable = draggableAccessor

@@ -75,7 +75,7 @@ class EventContainerWrapper extends React.Component {
     let newEnd = this.props.localizer.add(newSlot, duration, 'milliseconds')
     this.update(event, slotMetrics.getRange(newSlot, newEnd, false, true))
 
-    return event;
+    return event
   }
 
   handleResize(point, bounds) {
@@ -167,23 +167,28 @@ class EventContainerWrapper extends React.Component {
   }
 
   _selectable = () => {
-    console.log("______SELECTABLE")
+    console.log('______SELECTABLE')
     let wrapper = this.ref.current
     let node = wrapper.children[0]
     let isBeingDragged = false
 
     let selector = (this._selector = new Selection(
       () => wrapper.closest('.rbc-time-view'),
-      {  },
+      {},
       this.context
     ))
 
     let parent = scrollParent(wrapper)
 
     selector.on('beforeSelect', (point) => {
+      if (this.context.draggable.dragAndDropAction.event) {
+        // Already selecting an event
+        return false
+      }
+
       const { dragAndDropAction } = this.context.draggable
 
-      console.log("EventContainerWrapper CTX", this.context);
+      console.log('EventContainerWrapper CTX', this.context)
 
       if (dragAndDropAction.action === 'resize') {
         return pointInColumn(getBoundsForNode(node), point)
@@ -194,10 +199,10 @@ class EventContainerWrapper extends React.Component {
 
       const events = this.props.children.props.children
       let eventIdFromNode = eventNode.dataset.eventId
-      console.log({eventNode: eventIdFromNode, events});
+      console.log({ eventNode: eventIdFromNode, events })
       for (const event of events[1]) {
         let evtProp = event.props.event
-        if(evtProp.id === Number(eventIdFromNode)) {
+        if (evtProp.id === Number(eventIdFromNode)) {
           this.context.draggable.onStart()
           this.context.draggable.onBeginAction(evtProp, 'move')
         }
@@ -211,15 +216,15 @@ class EventContainerWrapper extends React.Component {
       // placement computation in handleMove()...
       this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
-      isBeingDragged = true;
-      return true;
+      isBeingDragged = true
+      return true
     })
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
-      console.log("selecting", {box, dragAndDropAction})
+      console.log('selecting', { box, dragAndDropAction })
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
@@ -239,7 +244,9 @@ class EventContainerWrapper extends React.Component {
     })
 
     selector.on('dragOverFromOutside', (point) => {
-      const item = this.context.draggable.dragFromOutsideItem ? this.context.draggable.dragFromOutsideItem() : null
+      const item = this.context.draggable.dragFromOutsideItem
+        ? this.context.draggable.dragFromOutsideItem()
+        : null
       if (!item) return
       const bounds = getBoundsForNode(node)
       if (!pointInColumn(bounds, point)) return this.reset()
@@ -263,12 +270,15 @@ class EventContainerWrapper extends React.Component {
       if (isBeingDragged) this.reset()
       this.context.draggable.onEnd(null)
     })
+
     selector.on('reset', () => {
       this.reset()
       this.context.draggable.onEnd(null)
     })
+
     selector.on('endMove', () => {
       this.context.draggable.onEnd(this.state.event)
+      this.reset()
     })
   }
 
@@ -298,9 +308,9 @@ class EventContainerWrapper extends React.Component {
 
     const events = children.props.children
 
-    let label,startsBeforeDay,startsAfterDay;
+    let label, startsBeforeDay, startsAfterDay
 
-    if(event){
+    if (event) {
       const { start, end } = event
       let format = 'eventTimeRangeFormat'
 
@@ -314,7 +324,7 @@ class EventContainerWrapper extends React.Component {
       else label = localizer.format({ start, end }, format)
     }
 
-    console.log({event});
+    console.log({ event })
 
     return React.cloneElement(children, {
       children: (
@@ -340,7 +350,7 @@ class EventContainerWrapper extends React.Component {
   }
 
   render() {
-    console.log("render");
+    console.log('render')
     return <div ref={this.ref}>{this.renderContent()}</div>
   }
 }
