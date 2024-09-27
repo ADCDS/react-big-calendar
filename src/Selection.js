@@ -49,8 +49,10 @@ const clickInterval = 250
 class Selection {
   constructor(
     node,
-    { global = false, longPressThreshold = 250, validContainers = [] } = {}
+    { global = false, longPressThreshold = 250, validContainers = [] } = {},
+    context
   ) {
+    this._context = context;
     this._initialEvent = null
     this.selecting = false
     this.isDetached = false
@@ -73,7 +75,9 @@ class Selection {
     // https://github.com/metafizzy/flickity/issues/457#issuecomment-254501356
     this._removeTouchMoveWindowListener = addEventListener(
       'touchmove',
-      () => {},
+      () => {
+        // console.log("im still alive")
+      },
       window
     )
     this._removeKeyDownListener = addEventListener('keydown', this._keyListener)
@@ -195,24 +199,22 @@ class Selection {
   // Listen for mousedown and touchstart events. When one is received, disable the other and setup
   // future event handling based on the type of event.
   _addInitialEventListener() {
-    const removeMouseDownListener = addEventListener('mousedown', (e) => {
-      this._removeInitialEventListener()
-      this._handleInitialEvent(e)
-      this._removeInitialEventListener = addEventListener(
-        'mousedown',
-        this._handleInitialEvent
-      )
-    })
+    console.log("_addInitialEventListener call");
+
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
-      this._removeInitialEventListener()
-      this._removeInitialEventListener = this._addLongPressListener(
-        this._handleInitialEvent,
-        e
-      )
+      console.log("touchstart")
+      this._handleInitialEvent(e);
     })
 
+    addEventListener(
+      'touchmove',
+      (e) => {
+        console.log("touchmove2")
+        this._handleMoveEvent(e)
+      }
+    )
+
     this._removeInitialEventListener = () => {
-      removeMouseDownListener()
       removeTouchStartListener()
     }
   }
@@ -245,6 +247,7 @@ class Selection {
 
   _handleInitialEvent(e) {
     this._initialEvent = e
+    console.log({isDetached: this.isDetached})
     if (this.isDetached) {
       return
     }
@@ -280,16 +283,24 @@ class Selection {
       if (!collides) return
     }
 
+    let touch = /^touch/.test(e.type)
     let result = this.emit(
       'beforeSelect',
       (this._initialEventData = {
-        isTouch: /^touch/.test(e.type),
+        isTouch: touch,
         x: pageX,
         y: pageY,
         clientX,
         clientY,
       })
     )
+
+    console.log({touch});
+    if(touch) {
+      this.emit('selectStart', this._initialEventData)
+    }
+
+    console.log({result, pageX, pageY, clientX, clientY, type: e.type});
 
     if (result === false) return
 
@@ -309,15 +320,7 @@ class Selection {
         )
         break
       case 'touchstart':
-        this._handleMoveEvent(e)
-        this._removeEndListener = addEventListener(
-          'touchend',
-          this._handleTerminatingEvent
-        )
-        this._removeMoveListener = addEventListener(
-          'touchmove',
-          this._handleMoveEvent
-        )
+
         break
       default:
         break
@@ -403,6 +406,7 @@ class Selection {
 
   _handleMoveEvent(e) {
     if (this._initialEventData === null || this.isDetached) {
+      console.log("Leaving 1", {_initialEventData: this._initialEventData, isDetached: this.isDetached})
       return
     }
 
@@ -418,11 +422,8 @@ class Selection {
     // Prevent emitting selectStart event until mouse is moved.
     // in Chrome on Windows, mouseMove event may be fired just after mouseDown event.
     if (click && !old && !(w || h)) {
+      console.log("Leaving 2", {click, old, w, h})
       return
-    }
-
-    if (!old && !click) {
-      this.emit('selectStart', this._initialEventData)
     }
 
     if (!click) {

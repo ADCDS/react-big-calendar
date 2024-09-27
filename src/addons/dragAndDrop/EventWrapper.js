@@ -38,19 +38,16 @@ class EventWrapper extends React.Component {
     if (e.button !== 0) return
     this.context.draggable.onBeginAction(this.props.event, 'resize', 'RIGHT')
   }
+
+  handleStopDragging = (e) => {
+    e.preventDefault();
+
+    this.context.draggable.onEnd()
+  }
+
   handleStartDragging = (e) => {
-    if (e.button !== 0) return
-    // hack: because of the way the anchors are arranged in the DOM, resize
-    // anchor events will bubble up to the move anchor listener. Don't start
-    // move operations when we're on a resize anchor.
-    const isResizeHandle = e.target
-      .getAttribute('class')
-      ?.includes('rbc-addons-dnd-resize')
-    if (!isResizeHandle) {
-      let extendedEvent = {...this.props.event}
-      extendedEvent.sourceResource = this.props.resource
-      this.context.draggable.onBeginAction(this.props.event, 'move')
-    }
+    this.context.draggable.onStart()
+    this.context.draggable.onBeginAction(this.props.event, 'move')
   }
 
   renderAnchor(direction) {
@@ -70,6 +67,10 @@ class EventWrapper extends React.Component {
       this.props
 
     let { children } = this.props
+
+    const newProps = {
+      'data-event-id': `${event.id}`
+    }
 
     if (event.__isPreview)
       return React.cloneElement(children, {
@@ -122,10 +123,6 @@ class EventWrapper extends React.Component {
        * rather than wrap the Event here as the latter approach
        * would lose the positioning.
        */
-      const newProps = {
-        onMouseDown: this.handleStartDragging,
-        onTouchStart: this.handleStartDragging,
-      }
 
       if (isResizable) {
         // replace original event child with anchor-embellished child

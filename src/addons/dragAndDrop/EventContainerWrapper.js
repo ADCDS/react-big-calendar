@@ -60,7 +60,9 @@ class EventContainerWrapper extends React.Component {
   }
 
   handleMove = (point, bounds) => {
-    if (!pointInColumn(bounds, point)) return this.reset()
+    let pointInColumn1 = pointInColumn(bounds, point)
+
+    if (!pointInColumn1) return this.reset()
     const { event } = this.context.draggable.dragAndDropAction
     const { accessors, slotMetrics } = this.props
 
@@ -163,24 +165,41 @@ class EventContainerWrapper extends React.Component {
   }
 
   _selectable = () => {
+    console.log("______SELECTABLE")
     let wrapper = this.ref.current
     let node = wrapper.children[0]
     let isBeingDragged = false
-    let selector = (this._selector = new Selection(() =>
-      wrapper.closest('.rbc-time-view')
+
+    let selector = (this._selector = new Selection(
+      () => wrapper.closest('.rbc-time-view'),
+      {  },
+      this.context
     ))
+
     let parent = scrollParent(wrapper)
 
     selector.on('beforeSelect', (point) => {
       const { dragAndDropAction } = this.context.draggable
 
-      if (!dragAndDropAction.action) return false
+      console.log("EventContainerWrapper CTX", this.context);
+
       if (dragAndDropAction.action === 'resize') {
         return pointInColumn(getBoundsForNode(node), point)
       }
 
       const eventNode = getEventNodeFromPoint(node, point)
       if (!eventNode) return false
+
+      const events = this.props.children.props.children
+      let eventIdFromNode = eventNode.dataset.eventId
+      console.log({eventNode: eventIdFromNode, events});
+      for (const event of events[1]) {
+        let evtProp = event.props.event
+        if(evtProp.id === Number(eventIdFromNode)) {
+          this.context.draggable.onStart()
+          this.context.draggable.onBeginAction(evtProp, 'move')
+        }
+      }
 
       // eventOffsetTop is distance from the top of the event to the initial
       // mouseDown position. We need this later to compute the new top of the
@@ -189,11 +208,16 @@ class EventContainerWrapper extends React.Component {
       // probably better just to capture the mouseDown point here and do the
       // placement computation in handleMove()...
       this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
+
+      isBeingDragged = true;
+      return true;
     })
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
+
+      console.log("selecting", {box, dragAndDropAction})
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
@@ -218,11 +242,6 @@ class EventContainerWrapper extends React.Component {
       const bounds = getBoundsForNode(node)
       if (!pointInColumn(bounds, point)) return this.reset()
       this.handleDragOverFromOutside(point, bounds)
-    })
-
-    selector.on('selectStart', () => {
-      isBeingDragged = true
-      this.context.draggable.onStart()
     })
 
     selector.on('select', (point) => {
@@ -293,25 +312,14 @@ class EventContainerWrapper extends React.Component {
         <React.Fragment>
           {events}
 
-          {event && (
-            <TimeGridEvent
-              event={event}
-              label={label}
-              className="rbc-addons-dnd-drag-preview"
-              style={{ top, height, width: 100 }}
-              getters={getters}
-              components={components}
-              accessors={{ ...accessors, ...dragAccessors }}
-              continuesPrior={startsBeforeDay}
-              continuesAfter={startsAfterDay}
-            />
-          )}
+          <div>{event.id}</div>
         </React.Fragment>
       ),
     })
   }
 
   render() {
+    console.log("render");
     return <div ref={this.ref}>{this.renderContent()}</div>
   }
 }

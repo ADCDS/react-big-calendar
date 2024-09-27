@@ -43,7 +43,7 @@ export default function DragAndDrop({ localizer }) {
     [setMyEvents]
   )
 
-  const defaultDate = useMemo(() => new Date(2015, 3, 12), [])
+  const defaultDate = useMemo(() => new Date(2015, 3, 13), [])
 
   return (
     <Fragment>
@@ -56,7 +56,7 @@ export default function DragAndDrop({ localizer }) {
       <div className="height600">
         <DragAndDropCalendar
           defaultDate={defaultDate}
-          defaultView={Views.MONTH}
+          defaultView={Views.DAY}
           events={myEvents}
           localizer={localizer}
           onEventDrop={moveEvent}

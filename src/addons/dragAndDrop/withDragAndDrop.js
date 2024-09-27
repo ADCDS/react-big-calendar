@@ -101,7 +101,7 @@ export default function withDragAndDrop(Calendar) {
       this.components = mergeComponents(components, {
         eventWrapper: EventWrapper,
         eventContainerWrapper: EventContainerWrapper,
-        weekWrapper: WeekWrapper,
+        // weekWrapper: WeekWrapper,
       })
 
       const elementPropsWithDropFromOutside = this.props.onDropFromOutside
@@ -117,7 +117,10 @@ export default function withDragAndDrop(Calendar) {
         !!interacting && 'rbc-addons-dnd-is-dragging'
       )
 
+
       const context = this.getDnDContextValue()
+
+      console.log("withDnD render", {context});
       return (
         <DnDContext.Provider value={context}>
           <Calendar
