@@ -65,7 +65,6 @@ class Selection {
 
     this._handleInitialEvent = this._handleInitialEvent.bind(this)
     this._handleMoveEvent = this._handleMoveEvent.bind(this)
-    this._handleTerminatingEvent = this._handleTerminatingEvent.bind(this)
     this._keyListener = this._keyListener.bind(this)
     this._dropFromOutsideListener = this._dropFromOutsideListener.bind(this)
     this._dragOverFromOutsideListener =
@@ -306,7 +305,8 @@ class Selection {
         y: pageY,
         clientX,
         clientY,
-      })
+      }),
+      e
     )
 
     console.log({ touch })
@@ -322,11 +322,11 @@ class Selection {
       case 'mousedown':
         this._removeEndListener = addEventListener(
           'mouseup',
-          this._handleTerminatingEvent
+          () => this.emit('endMove')
         )
         this._onEscListener = addEventListener(
           'keydown',
-          this._handleTerminatingEvent
+          () => this.emit('endMove')
         )
         this._removeMoveListener = addEventListener(
           'mousemove',
@@ -351,40 +351,6 @@ class Selection {
     }
 
     return containers.some((target) => !!eventTarget.closest(target))
-  }
-
-  _handleTerminatingEvent(e) {
-    const selecting = this.selecting
-    const bounds = this._selectRect
-    // If it's not in selecting state, it's a click event
-    if (!selecting && e.type.includes('key')) {
-      e = this._initialEvent
-    }
-
-    this.selecting = false
-    this._removeEndListener && this._removeEndListener()
-    this._removeMoveListener && this._removeMoveListener()
-
-    this._selectRect = null
-    this._initialEvent = null
-    this._initialEventData = null
-    if (!e) return
-
-    let inRoot = !this.container || contains(this.container(), e.target)
-    let isWithinValidContainer = this._isWithinValidContainer(e)
-
-    if (e.key === 'Escape' || !isWithinValidContainer) {
-      return this.emit('reset')
-    }
-
-    if (!selecting && inRoot) {
-      return this._handleClickEvent(e)
-    }
-
-    // User drag-clicked in the Selectable area
-    if (selecting) return this.emit('select', bounds)
-
-    return this.emit('reset')
   }
 
   _handleClickEvent(e) {

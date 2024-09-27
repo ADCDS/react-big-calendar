@@ -180,7 +180,7 @@ class EventContainerWrapper extends React.Component {
 
     let parent = scrollParent(wrapper)
 
-    selector.on('beforeSelect', (point) => {
+    selector.on('beforeSelect', (point, e) => {
       if (this.context.draggable.dragAndDropAction.event) {
         // Already selecting an event
         return false
@@ -204,7 +204,17 @@ class EventContainerWrapper extends React.Component {
         let evtProp = event.props.event
         if (evtProp.id === Number(eventIdFromNode)) {
           this.context.draggable.onStart()
-          this.context.draggable.onBeginAction(evtProp, 'move')
+
+          const isResizeHandle = e.target
+            .getAttribute('class')
+            ?.includes('rbc-addons-dnd-resize')
+          if (!isResizeHandle) {
+            isBeingDragged = true
+            this.context.draggable.onBeginAction(evtProp, 'move')
+          } else {
+            isBeingDragged = false
+            this.context.draggable.onBeginAction(evtProp, 'resize')
+          }
         }
       }
 
@@ -216,7 +226,6 @@ class EventContainerWrapper extends React.Component {
       // placement computation in handleMove()...
       this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
-      isBeingDragged = true
       return true
     })
 
