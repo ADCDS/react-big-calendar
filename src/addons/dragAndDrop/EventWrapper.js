@@ -26,8 +26,8 @@ class EventWrapper extends React.Component {
     const cls = direction === 'Up' || direction === 'Down' ? 'ns' : 'ew'
     return (
       <div
+        data-anchor-direction={direction}
         className={`rbc-addons-dnd-resize-${cls}-anchor`}
-        onMouseDown={this[`handleResize${direction}`]}
       >
         <div className={`rbc-addons-dnd-resize-${cls}-icon`} />
       </div>
