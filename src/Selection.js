@@ -141,7 +141,9 @@ class Selection {
 
     if (!box || !this.selecting) return false
 
-    return objectsCollide(box, getBoundsForNode(node))
+    let boundsForNode = getBoundsForNode(node)
+    // console.log("isSelected", {box, selecting: this.selecting, boundsForNode});
+    return objectsCollide(box, boundsForNode)
   }
 
   filter(items) {
@@ -203,6 +205,7 @@ class Selection {
     console.log('_addInitialEventListener call')
 
     const removeMouseDownListener = addEventListener('mousedown', (e) => {
+      console.log("initial mouse down");
       if (!this._onlyTouch) {
         this._removeInitialEventListener()
         this._handleInitialEvent(e)
@@ -220,14 +223,11 @@ class Selection {
     })
 
     addEventListener('touchmove', (e) => {
-      console.log('touchmove2')
+      // console.log('touchmove2')
       this._handleMoveEvent(e)
     })
 
-    addEventListener('touchend', (e) => {
-      this._currentCalendarEvent = null;
-      this.emit('endMove')
-    })
+    addEventListener('touchend', (e) => this._handleEndMove(e))
 
     this._removeInitialEventListener = () => {
       removeMouseDownListener()
@@ -259,6 +259,12 @@ class Selection {
     })
 
     e.preventDefault()
+  }
+
+  _handleEndMove(e) {
+    this.selecting = false;
+    this._currentCalendarEvent = null;
+    this.emit('endMove')
   }
 
   _handleInitialEvent(e) {
@@ -312,8 +318,15 @@ class Selection {
       e
     )
 
-    this._currentCalendarEvent = result.event;
     if (result.event) { // We touched an event
+      this._currentCalendarEvent = result.event;
+
+      // prevent clicking event
+      e.preventDefault()
+
+      // Stop propagation: We do not want to select a timecell while touch an event
+      e.stopImmediatePropagation();
+    } else if(result.timeCell || result.dayCell) {
       // prevent clicking event
       e.preventDefault()
 
@@ -327,24 +340,20 @@ class Selection {
 
     switch (e.type) {
       case 'mousedown':
+        this.selecting = true;
+
         this._removeEndListener = addEventListener(
           'mouseup',
-          () => {
-            this._currentCalendarEvent = null;
-            this.emit('endMove')
-          }
+          (e) => this._handleEndMove(e)
         )
         this._onEscListener = addEventListener(
           'keydown',
-          () => {
-            this._currentCalendarEvent = null;
-            this.emit('endMove')
-          }
+          (e) => this._handleEndMove(e)
         )
         this._removeMoveListener = addEventListener(
           'mousemove',
           (e) => {
-            if (!this._onlyTouch) {
+            if (!this._onlyTouch && this.selecting) {
               this._handleMoveEvent(e)
             }
           }
@@ -400,10 +409,10 @@ class Selection {
 
   _handleMoveEvent(e) {
     if (!this._initialEventData || this.isDetached) {
-      console.log('Leaving 1', {
-        _initialEventData: this._initialEventData,
-        isDetached: this.isDetached,
-      })
+      // console.log('Leaving 1', {
+      //   _initialEventData: this._initialEventData,
+      //   isDetached: this.isDetached,
+      // })
       return
     }
 
@@ -419,7 +428,7 @@ class Selection {
     // Prevent emitting selectStart event until mouse is moved.
     // in Chrome on Windows, mouseMove event may be fired just after mouseDown event.
     if (click && !old && !(w || h)) {
-      console.log('Leaving 2', { click, old, w, h })
+      // console.log('Leaving 2', { click, old, w, h })
       return
     }
 

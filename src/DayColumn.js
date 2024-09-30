@@ -269,6 +269,8 @@ class DayColumn extends React.Component {
     }))
 
     let maybeSelect = (box) => {
+      console.log("maybeSelect");
+
       let onSelecting = this.props.onSelecting
       let current = this.state || {}
       let state = selectionState(box)
@@ -337,12 +339,16 @@ class DayColumn extends React.Component {
     }
 
     selector.on('selecting', maybeSelect)
-    selector.on('selectStart', maybeSelect)
+    // selector.on('selectStart', maybeSelect)
 
     selector.on('beforeSelect', (box) => {
-      if (this.props.selectable !== 'ignoreEvents') return
+      if (this.props.selectable !== 'ignoreEvents') return {timeCell: true}
 
-      return !isEvent(this.containerRef.current, box)
+      if(!isEvent(this.containerRef.current, box)) {
+        return {timeCell: true}
+      } else {
+       return {};
+      }
     })
 
     selector.on('click', (box) => selectorClicksHandler(box, 'click'))
@@ -351,13 +357,17 @@ class DayColumn extends React.Component {
       selectorClicksHandler(box, 'doubleClick')
     )
 
-    selector.on('select', (bounds) => {
+    selector.on('selecting', (bounds) => {
+      console.log("select", {bounds});
       if (this.state.selecting) {
         this._selectSlot({ ...this.state, bounds })
       }
     })
 
     selector.on('endMove', () => {
+      if(!this.state.selecting)
+        return;
+
       const {endDate, startDate, action, bounds, box} = this.state;
 
       this.setState({ selecting: false });

@@ -24,8 +24,11 @@
   .rbc-event {
     transition: opacity 150ms;
 
-    &:hover {
-      .rbc-addons-dnd-resize-ns-icon, .rbc-addons-dnd-resize-ew-icon { display: block; }
+    &.rbc-selected, &:hover {
+      .rbc-addons-dnd-resize-ns-icon,
+      .rbc-addons-dnd-resize-ew-icon {
+        display: block;
+      }
     }
   }
 

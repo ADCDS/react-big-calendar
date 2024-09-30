@@ -98,6 +98,7 @@ class BackgroundCells extends React.Component {
     }
 
     selector.on('selecting', (box) => {
+      // console.log("selecting", {box})
       let { range, rtl } = this.props
 
       let startIdx = -1
@@ -120,15 +121,20 @@ class BackgroundCells extends React.Component {
 
       this.setState({
         selecting: true,
+        box,
         startIdx,
         endIdx,
       })
     })
 
     selector.on('beforeSelect', (box) => {
-      if (this.props.selectable !== 'ignoreEvents') return
+      if (this.props.selectable !== 'ignoreEvents') return {dayCell: true}
 
-      return !isEvent(this.containerRef.current, box)
+      if(!isEvent(this.containerRef.current, box)) {
+        return {dayCell: true}
+      } else {
+        return {};
+      }
     })
 
     selector.on('click', (point) => selectorClicksHandler(point, 'click'))
@@ -137,8 +143,12 @@ class BackgroundCells extends React.Component {
       selectorClicksHandler(point, 'doubleClick')
     )
 
-    selector.on('select', (bounds) => {
-      this._selectSlot({ ...this.state, action: 'select', bounds })
+    selector.on('endMove', (bounds) => {
+      if(!this.state.selecting)
+        return;
+
+      // console.log("state", this.state)
+      this._selectSlot({ ...this.state, action: 'select' })
       this._initial = {}
       this.setState({ selecting: false })
       notify(this.props.onSelectEnd, [this.state])

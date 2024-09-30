@@ -57,11 +57,11 @@ export default function DragAndDrop({ localizer }) {
         <DragAndDropCalendar
           defaultDate={defaultDate}
           defaultView={Views.MONTH}
-          selectable={true}
           events={myEvents}
           localizer={localizer}
           onEventDrop={moveEvent}
           onEventResize={resizeEvent}
+          selectable={true}
           popup
           resizable
         />
