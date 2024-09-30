@@ -334,6 +334,8 @@ class DayColumn extends React.Component {
           action: actionType,
           box,
         })
+
+        this.notifySelectSlot()
       }
       this.setState({ selecting: false })
     }
@@ -368,24 +370,28 @@ class DayColumn extends React.Component {
       if(!this.state.selecting)
         return;
 
-      const {endDate, startDate, action, bounds, box} = this.state;
-
-      this.setState({ selecting: false });
-      notify(this.props.onSelectSlot, {
-        slots: this._selectedSlots,
-        start: startDate,
-        end: endDate,
-        resourceId: this.props.resource,
-        action: 'select',
-        bounds,
-        box,
-      })
+      this.notifySelectSlot()
     })
 
     selector.on('reset', () => {
       if (this.state.selecting) {
         this.setState({ selecting: false })
       }
+    })
+  }
+
+  notifySelectSlot() {
+    const { endDate, startDate, action, bounds, box } = this.state
+
+    this.setState({ selecting: false })
+    notify(this.props.onSelectSlot, {
+      slots: this._selectedSlots,
+      start: startDate,
+      end: endDate,
+      resourceId: this.props.resource,
+      action: 'select',
+      bounds,
+      box,
     })
   }
 

@@ -262,9 +262,13 @@ class Selection {
   }
 
   _handleEndMove(e) {
-    this.selecting = false;
-    this._currentCalendarEvent = null;
-    this.emit('endMove')
+    if(!this.selecting && this._initialEventData) {
+      this.emit('click', this._initialEventData)
+    } else {
+      this.selecting = false;
+      this._currentCalendarEvent = null;
+      this.emit('endMove')
+    }
   }
 
   _handleInitialEvent(e) {
@@ -340,8 +344,6 @@ class Selection {
 
     switch (e.type) {
       case 'mousedown':
-        this.selecting = true;
-
         this._removeEndListener = addEventListener(
           'mouseup',
           (e) => this._handleEndMove(e)
@@ -353,6 +355,7 @@ class Selection {
         this._removeMoveListener = addEventListener(
           'mousemove',
           (e) => {
+            this.selecting = true;
             if (!this._onlyTouch && this.selecting) {
               this._handleMoveEvent(e)
             }
