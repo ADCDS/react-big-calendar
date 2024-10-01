@@ -349,7 +349,7 @@ class EventContainerWrapper extends React.Component {
       else label = localizer.format({ start, end }, format)
     }
 
-    console.log({ event })
+    // console.log({ event })
 
     return React.cloneElement(children, {
       children: (
@@ -375,7 +375,7 @@ class EventContainerWrapper extends React.Component {
   }
 
   render() {
-    console.log('render')
+    // console.log('render')
     return <div ref={this.ref}>{this.renderContent()}</div>
   }
 }

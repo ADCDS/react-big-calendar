@@ -142,7 +142,7 @@ class Selection {
     if (!box || !this.selecting) return false
 
     let boundsForNode = getBoundsForNode(node)
-    console.log("isSelected", {box, selecting: this.selecting, boundsForNode});
+    // console.log("isSelected", {box, selecting: this.selecting, boundsForNode});
     return objectsCollide(box, boundsForNode)
   }
 
@@ -205,7 +205,7 @@ class Selection {
     // console.log('_addInitialEventListener call')
 
     const removeMouseDownListener = addEventListener('mousedown', (e) => {
-      console.log("initial mouse down");
+      // console.log("initial mouse down");
       if (!this._onlyTouch) {
         this._removeInitialEventListener()
         this._handleInitialEvent(e)
@@ -218,7 +218,7 @@ class Selection {
 
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
       this._onlyTouch = true
-      console.log('touchstart')
+      // console.log('touchstart')
       this._handleInitialEvent(e)
     })
 
@@ -277,7 +277,7 @@ class Selection {
 
   _handleInitialEvent(e) {
     this._initialEvent = e
-    console.log({ isDetached: this.isDetached })
+    // console.log({ isDetached: this.isDetached })
     if (this.isDetached) {
       return
     }
@@ -536,7 +536,7 @@ export function objectsCollide(nodeA, nodeB, tolerance = 0) {
  * @return {Object}
  */
 export function getBoundsForNode(node) {
-  console.log("getBoundsForNode", node);
+  // console.log("getBoundsForNode", node);
   if (!node.getBoundingClientRect) return node
 
   let rect = node.getBoundingClientRect(),

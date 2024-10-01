@@ -72,9 +72,6 @@ class BackgroundCells extends React.Component {
 
   _selectable() {
     let node = this.containerRef.current
-    const parent = node.parentElement.parentElement
-    console.log("BackgroundCells _selectable", node);
-    console.log("BackgroundCells _selectable, parent", parent);
 
     let selector = (this._selector = new Selection(this.props.container, {
       longPressThreshold: this.props.longPressThreshold,

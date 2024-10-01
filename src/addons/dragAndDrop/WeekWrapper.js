@@ -152,6 +152,8 @@ class WeekWrapper extends React.Component {
     ))
 
     selector.on('beforeSelect', (point, e) => {
+      console.log("WeekWrapper beforeSelect");
+
       const { isAllDay } = this.props
       const { action } = this.context.draggable.dragAndDropAction
       const bounds = getBoundsForNode(node)
@@ -162,7 +164,11 @@ class WeekWrapper extends React.Component {
         return false
       }
 
-      if (!pointInBox(bounds, point)) return false
+      if (!pointInBox(bounds, point)) {
+        isBeingDragged = false;
+        // Return undefined so DayColumn beforeSelect can be triggered
+        return
+      }
 
       const eventNode = getEventNodeFromPoint(node, point)
       if (!eventNode) return false
@@ -246,6 +252,10 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('endMove', () => {
+      if(!isBeingDragged) {
+        return;
+      }
+
       isBeingDragged = false
       const { dragAndDropAction } = this.context.draggable
 

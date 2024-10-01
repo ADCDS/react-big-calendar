@@ -269,8 +269,6 @@ class DayColumn extends React.Component {
     }))
 
     let maybeSelect = (box) => {
-      console.log("maybeSelect");
-
       let onSelecting = this.props.onSelecting
       let current = this.state || {}
       let state = selectionState(box)
@@ -344,6 +342,7 @@ class DayColumn extends React.Component {
     // selector.on('selectStart', maybeSelect)
 
     selector.on('beforeSelect', (box) => {
+      console.log("DayColumn beforeSelect");
       if (this.props.selectable !== 'ignoreEvents') return {timeCell: true}
 
       if(!isEvent(this.containerRef.current, box)) {
@@ -360,10 +359,12 @@ class DayColumn extends React.Component {
     )
 
     selector.on('selecting', (bounds) => {
-      console.log("select", {bounds});
+      console.log("selecting 1", {bounds});
       if (this.state.selecting) {
         this._selectSlot({ ...this.state, bounds })
       }
+
+      return true //avoid calling other 'selecting' selectors
     })
 
     selector.on('endMove', () => {
@@ -405,7 +406,6 @@ class DayColumn extends React.Component {
     let current = startDate;
     this._selectedSlots = []
 
-    console.log("_selectSlot", {selectedSlots: this._selectedSlots});
     while (this.props.localizer.lte(current, endDate)) {
       this._selectedSlots.push(current)
       current = new Date(+current + this.props.step * 60 * 1000) // using Date ensures not to create an endless loop the day DST begins
