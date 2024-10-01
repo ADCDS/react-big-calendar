@@ -212,7 +212,7 @@ class WeekWrapper extends React.Component {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
-      console.log('selecting', { box, dragAndDropAction })
+      // console.log('selecting', { box, dragAndDropAction })
 
       if (dragAndDropAction.action === 'move') {
         return this.handleMove(box, bounds)
@@ -225,18 +225,6 @@ class WeekWrapper extends React.Component {
     selector.on('selectStart', () => {
       isBeingDragged = true
       this.context.draggable.onStart()
-    })
-
-    selector.on('select', (point) => {
-      const bounds = getBoundsForNode(node)
-      isBeingDragged = false
-      const { dragAndDropAction } = this.context.draggable
-      if (!this.state.segment) return
-      if (!pointInBox(bounds, point)) {
-        this.reset()
-      } else {
-        this.handleInteractionEnd()
-      }
     })
 
     selector.on('dropFromOutside', (point) => {
@@ -257,10 +245,11 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('endMove', () => {
-      console.log("week state", {state: this.state, context: this.context});
+      isBeingDragged = false
+      const { dragAndDropAction } = this.context.draggable
 
-      this.context.draggable.onEnd(this.state.segment.event)
-      this.reset()
+      console.log("endMove", { dragAndDropAction});
+      this.handleInteractionEnd()
     })
 
     selector.on('click', () => {

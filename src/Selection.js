@@ -202,7 +202,7 @@ class Selection {
   // Listen for mousedown and touchstart events. When one is received, disable the other and setup
   // future event handling based on the type of event.
   _addInitialEventListener() {
-    console.log('_addInitialEventListener call')
+    // console.log('_addInitialEventListener call')
 
     const removeMouseDownListener = addEventListener('mousedown', (e) => {
       console.log("initial mouse down");
