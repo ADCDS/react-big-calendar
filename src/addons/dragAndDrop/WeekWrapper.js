@@ -232,11 +232,6 @@ class WeekWrapper extends React.Component {
       }
     })
 
-    selector.on('selectStart', () => {
-      isBeingDragged = true
-      this.context.draggable.onStart()
-    })
-
     selector.on('dropFromOutside', (point) => {
       if (!this.context.draggable.onDropFromOutside) return
       const bounds = getBoundsForNode(node)
