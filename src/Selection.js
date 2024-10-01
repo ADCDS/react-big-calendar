@@ -269,6 +269,10 @@ class Selection {
       this._currentCalendarEvent = null;
       this.emit('endMove')
     }
+
+    this._removeEndListener && this._removeEndListener();
+    this._onEscListener && this._onEscListener();
+    this._removeMoveListener && this._removeMoveListener();
   }
 
   _handleInitialEvent(e) {

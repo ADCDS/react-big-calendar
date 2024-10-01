@@ -37,7 +37,7 @@ class EventWrapper extends React.Component {
   render() {
     const { draggable } = this.context
 
-    console.log('###EVENT_WRAPPER_RENDER', { draggable })
+    // console.log('###EVENT_WRAPPER_RENDER', { draggable })
     const { event, type, continuesPrior, continuesAfter, resizable } =
       this.props
 
