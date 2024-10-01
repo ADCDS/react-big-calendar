@@ -348,7 +348,7 @@ class DayColumn extends React.Component {
       if(!isEvent(this.containerRef.current, box)) {
         return {timeCell: true}
       } else {
-       return {};
+       return // Return null so EventCOntainerWrapper beforeSelect gets triggered
       }
     })
 

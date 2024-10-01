@@ -122,7 +122,7 @@ export default function withDragAndDrop(Calendar) {
 
       const context = this.getDnDContextValue()
 
-      console.log('withDnD render', { context })
+      // console.log('withDnD render', { context })
       return (
         <DnDContext.Provider value={context}>
           <Calendar

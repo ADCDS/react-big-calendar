@@ -69,7 +69,7 @@ class EventContainerWrapper extends React.Component {
     const newSlot = slotMetrics.closestSlotFromPoint(
       { y: point.y - this.eventOffsetTop, x: point.x },
       bounds
-    )
+    );
 
     const { duration } = eventTimes(event, accessors, this.props.localizer)
     let newEnd = this.props.localizer.add(newSlot, duration, 'milliseconds')
@@ -170,9 +170,10 @@ class EventContainerWrapper extends React.Component {
   }
 
   _selectable = () => {
-    console.log('______SELECTABLE')
     let wrapper = this.ref.current
     let node = wrapper.children[0]
+
+    console.log('______SELECTABLE', node)
     let isBeingDragged = false
 
     let selector = (this._selector = new Selection(
@@ -184,6 +185,8 @@ class EventContainerWrapper extends React.Component {
     let parent = scrollParent(wrapper)
 
     selector.on('beforeSelect', (point, e) => {
+      console.log('EventContainerWrapper beforeSelect', node)
+
       if (this.context.draggable.dragAndDropAction.event) {
         // Already selecting an event
         return {event: this.context.draggable.dragAndDropAction.event}
@@ -203,8 +206,8 @@ class EventContainerWrapper extends React.Component {
 
       let evtProp;
       for (const event of events[1]) {
-        evtProp = event.props.event
-        if (evtProp.id === Number(eventIdFromNode)) {
+        if (event.props.event.id === Number(eventIdFromNode)) {
+          evtProp = event.props.event
           this.context.draggable.onStart()
 
           const isResizeHandle = e.target
@@ -230,22 +233,27 @@ class EventContainerWrapper extends React.Component {
         }
       }
 
-      // eventOffsetTop is distance from the top of the event to the initial
-      // mouseDown position. We need this later to compute the new top of the
-      // event during move operations, since the final location is really a
-      // delta from this point. note: if we want to DRY this with WeekWrapper,
-      // probably better just to capture the mouseDown point here and do the
-      // placement computation in handleMove()...
-      this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
+      if(evtProp) {
+        // eventOffsetTop is distance from the top of the event to the initial
+        // mouseDown position. We need this later to compute the new top of the
+        // event during move operations, since the final location is really a
+        // delta from this point. note: if we want to DRY this with WeekWrapper,
+        // probably better just to capture the mouseDown point here and do the
+        // placement computation in handleMove()...
+        this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
-      return {event: evtProp}
+        return {event: evtProp}
+      }
+
+      // If no event was found, return null, that way we trigger the beforeSelect
+      // In the sibling days in week view
     })
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
-      // console.log('selecting', { box, dragAndDropAction })
+      console.log('EventContainerWrapper selecting', { box, dragAndDropAction })
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
@@ -302,8 +310,13 @@ class EventContainerWrapper extends React.Component {
     })
 
     selector.on('endMove', () => {
-      this.context.draggable.onEnd(this.state.event)
-      this.reset()
+      if(this.state.event) {
+        // If the moved event did not belong to this container, return null,
+        // that way we allow the sibling days in week view's endMove to trigger
+
+        this.context.draggable.onEnd(this.state.event)
+        this.reset()
+      }
     })
   }
 

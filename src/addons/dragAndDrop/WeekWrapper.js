@@ -216,10 +216,13 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('selecting', (box) => {
+      if(!isBeingDragged)
+        return;
+
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
-      // console.log('selecting', { box, dragAndDropAction })
+      console.log('WeekWrapper selecting', { box, dragAndDropAction })
 
       if (dragAndDropAction.action === 'move') {
         return this.handleMove(box, bounds)
