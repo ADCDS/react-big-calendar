@@ -187,6 +187,11 @@ class EventContainerWrapper extends React.Component {
     selector.on('beforeSelect', (point, e) => {
       console.log('EventContainerWrapper beforeSelect', node)
 
+      const eventNode = getEventNodeFromPoint(node, point)
+      if (!eventNode) return false
+
+      this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
+
       if (this.context.draggable.dragAndDropAction.event) {
         // Already selecting an event
         return {event: this.context.draggable.dragAndDropAction.event}
@@ -197,9 +202,6 @@ class EventContainerWrapper extends React.Component {
       if (dragAndDropAction.action === 'resize') {
         return pointInColumn(getBoundsForNode(node), point)
       }
-
-      const eventNode = getEventNodeFromPoint(node, point)
-      if (!eventNode) return false
 
       const events = this.props.children.props.children
       let eventIdFromNode = eventNode.dataset.eventId
@@ -240,30 +242,27 @@ class EventContainerWrapper extends React.Component {
         // delta from this point. note: if we want to DRY this with WeekWrapper,
         // probably better just to capture the mouseDown point here and do the
         // placement computation in handleMove()...
-        this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
-        return {event: evtProp}
+        // return {event: evtProp}
       }
 
       // If no event was found, return null, that way we trigger the beforeSelect
       // In the sibling days in week view
-    })
+    }, {notMutuallyExclusive: true})
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
-      console.log('EventContainerWrapper selecting', { box, dragAndDropAction })
+      console.log('EventContainerWrapper selecting', node)
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
-        const event = this.handleMove(box, bounds)
-        return {event}
+        this.handleMove(box, bounds)
       }
       if (dragAndDropAction.action === 'resize') {
         this.updateParentScroll(parent, node)
-        const event = this.handleResize(box, bounds)
-        return { event }
+        this.handleResize(box, bounds)
       }
     })
 

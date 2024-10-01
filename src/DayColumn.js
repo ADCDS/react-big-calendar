@@ -13,8 +13,11 @@ import TimeGridEvent from './TimeGridEvent'
 import { DayLayoutAlgorithmPropType } from './utils/propTypes'
 
 import DayColumnWrapper from './DayColumnWrapper'
+import { DnDContext } from './addons/dragAndDrop/DnDContext'
 
 class DayColumn extends React.Component {
+  static contextType = DnDContext
+
   state = { selecting: false, timeIndicatorPosition: null }
   intervalTriggered = false
 
@@ -268,30 +271,6 @@ class DayColumn extends React.Component {
       longPressThreshold: longPressThreshold,
     }))
 
-    let maybeSelect = (box) => {
-      let onSelecting = this.props.onSelecting
-      let current = this.state || {}
-      let state = selectionState(box)
-      let { startDate: start, endDate: end } = state
-
-      if (onSelecting) {
-        if (
-          (localizer.eq(current.startDate, start, 'minutes') &&
-            localizer.eq(current.endDate, end, 'minutes')) ||
-          onSelecting({ start, end, resourceId: this.props.resource }) === false
-        )
-          return
-      }
-
-      if (
-        this.state.start !== state.start ||
-        this.state.end !== state.end ||
-        this.state.selecting !== state.selecting
-      ) {
-        this.setState(state)
-      }
-    }
-
     let selectionState = (point) => {
       let currentSlot = this.slotMetrics.closestSlotFromPoint(
         point,
@@ -338,9 +317,6 @@ class DayColumn extends React.Component {
       this.setState({ selecting: false })
     }
 
-    selector.on('selecting', maybeSelect)
-    // selector.on('selectStart', maybeSelect)
-
     selector.on('beforeSelect', (box) => {
       console.log("DayColumn beforeSelect");
       if (this.props.selectable !== 'ignoreEvents') return {timeCell: true}
@@ -359,12 +335,37 @@ class DayColumn extends React.Component {
     )
 
     selector.on('selecting', (bounds) => {
-      console.log("selecting 1", {bounds});
+      const { event } = this.context.draggable.dragAndDropAction
+
+      console.log("DayColumn selecting", {event})
+      if(event)
+        return;
+
+      let onSelecting = this.props.onSelecting
+      let current = this.state || {}
+      let state = selectionState(bounds)
+      let { startDate: start, endDate: end } = state
+
+      if (onSelecting) {
+        if (
+          (localizer.eq(current.startDate, start, 'minutes') &&
+            localizer.eq(current.endDate, end, 'minutes')) ||
+          onSelecting({ start, end, resourceId: this.props.resource }) === false
+        )
+          return
+      }
+
+      if (
+        this.state.start !== state.start ||
+        this.state.end !== state.end ||
+        this.state.selecting !== state.selecting
+      ) {
+        this.setState(state)
+      }
+
       if (this.state.selecting) {
         this._selectSlot({ ...this.state, bounds })
       }
-
-      return true //avoid calling other 'selecting' selectors
     })
 
     selector.on('endMove', () => {

@@ -5,8 +5,11 @@ import clsx from 'clsx'
 import { notify } from './utils/helpers'
 import { dateCellSelection, getSlotAtX, pointInBox } from './utils/selection'
 import Selection, { getBoundsForNode, isEvent, isShowMore } from './Selection'
+import { DnDContext } from './addons/dragAndDrop/DnDContext'
 
 class BackgroundCells extends React.Component {
+  static contextType = DnDContext
+
   constructor(props, context) {
     super(props, context)
 
@@ -99,6 +102,12 @@ class BackgroundCells extends React.Component {
     }
 
     selector.on('selecting', (box) => {
+      const { event } = this.context.draggable.dragAndDropAction
+
+      console.log("BackgroundCells selecting", {event})
+      if(event)
+        return;
+
       let { range, rtl } = this.props
 
       let startIdx = -1
@@ -125,10 +134,6 @@ class BackgroundCells extends React.Component {
         startIdx,
         endIdx,
       })
-    })
-
-    selector.on('beforeSelect', (box) => {
-      return
     })
 
     selector.on('click', (point) => selectorClicksHandler(point, 'click'))

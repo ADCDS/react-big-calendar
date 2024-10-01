@@ -225,10 +225,10 @@ class WeekWrapper extends React.Component {
       console.log('WeekWrapper selecting', { box, dragAndDropAction })
 
       if (dragAndDropAction.action === 'move') {
-        return this.handleMove(box, bounds)
+        this.handleMove(box, bounds)
       }
       if (dragAndDropAction.action === 'resize') {
-        return this.handleResize(box, bounds)
+        this.handleResize(box, bounds)
       }
     })
 
@@ -304,8 +304,6 @@ class WeekWrapper extends React.Component {
     const { children, accessors } = this.props
 
     let { segment } = this.state
-
-    console.log({ segment })
 
     return (
       <div ref={this.ref} className="rbc-addons-dnd-row-body">

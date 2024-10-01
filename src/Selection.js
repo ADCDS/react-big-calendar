@@ -49,11 +49,8 @@ const clickInterval = 250
 class Selection {
   constructor(
     node,
-    { global = false, longPressThreshold = 250, validContainers = [] } = {},
-    context
+    { global = false, longPressThreshold = 250, validContainers = [] } = {}
   ) {
-    this._context = context
-    this._initialEvent = null
     this.selecting = false
     this.isDetached = false
     this.container = node
@@ -92,10 +89,13 @@ class Selection {
     this._addInitialEventListener()
   }
 
-  on(type, handler) {
+  on(type, handler, options = {}) {
     let handlers = this._listeners[type] || (this._listeners[type] = [])
 
-    handlers.push(handler)
+    handlers.push({
+      _fn: handler,
+      options
+    })
 
     return {
       remove() {
@@ -108,8 +108,11 @@ class Selection {
   emit(type, ...args) {
     let result
     let handlers = this._listeners[type] || []
-    handlers.forEach((fn) => {
-      if (result === undefined) result = fn(...args)
+
+    handlers.forEach(({_fn, options}) => {
+      if (result === undefined) {
+        result = _fn(...args)
+      }
     })
     return result
   }
@@ -119,7 +122,6 @@ class Selection {
     this._initialEventData = null
     this._selectRect = null
     this._onlyTouch = false
-    this._currentCalendarEvent = null
     this.selecting = false
     this._lastClickData = null
     this.isDetached = true
@@ -202,10 +204,10 @@ class Selection {
   // Listen for mousedown and touchstart events. When one is received, disable the other and setup
   // future event handling based on the type of event.
   _addInitialEventListener() {
-    // console.log('_addInitialEventListener call')
+    console.log('_addInitialEventListener call')
 
     const removeMouseDownListener = addEventListener('mousedown', (e) => {
-      // console.log("initial mouse down");
+      console.log("mousedown");
       if (!this._onlyTouch) {
         this._removeInitialEventListener()
         this._handleInitialEvent(e)
@@ -266,7 +268,6 @@ class Selection {
       this.emit('click', this._initialEventData)
     } else {
       this.selecting = false;
-      this._currentCalendarEvent = null;
       this.emit('endMove')
     }
 
@@ -325,24 +326,6 @@ class Selection {
       }),
       e
     )
-
-    if(result) {
-      if (result.event) { // We touched an event
-        this._currentCalendarEvent = result.event;
-
-        // prevent clicking event
-        e.preventDefault()
-
-        // Stop propagation: We do not want to select a timecell while touch an event
-        e.stopImmediatePropagation();
-      } else if (result.timeCell || result.dayCell) {
-        // prevent clicking event
-        e.preventDefault()
-
-        // Stop propagation: We do not want to select a timecell while touch an event
-        e.stopImmediatePropagation();
-      }
-    }
 
     if (touch) {
       this.emit('selectStart', this._initialEventData)
@@ -453,15 +436,6 @@ class Selection {
       }
 
       const ret = this.emit('selecting', this._selectRect)
-      this._currentCalendarEvent = ret?.event;
-
-      if (this._currentCalendarEvent) { // We touched an event
-        // prevent scrolling
-        e.preventDefault()
-
-        // Stop propagation: We do not want to select a timecell while touch an event
-        e.stopImmediatePropagation();
-      }
     }
   }
 
