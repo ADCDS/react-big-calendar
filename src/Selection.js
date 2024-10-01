@@ -142,7 +142,7 @@ class Selection {
     if (!box || !this.selecting) return false
 
     let boundsForNode = getBoundsForNode(node)
-    // console.log("isSelected", {box, selecting: this.selecting, boundsForNode});
+    console.log("isSelected", {box, selecting: this.selecting, boundsForNode});
     return objectsCollide(box, boundsForNode)
   }
 
@@ -326,20 +326,22 @@ class Selection {
       e
     )
 
-    if (result.event) { // We touched an event
-      this._currentCalendarEvent = result.event;
+    if(result) {
+      if (result.event) { // We touched an event
+        this._currentCalendarEvent = result.event;
 
-      // prevent clicking event
-      e.preventDefault()
+        // prevent clicking event
+        e.preventDefault()
 
-      // Stop propagation: We do not want to select a timecell while touch an event
-      e.stopImmediatePropagation();
-    } else if(result.timeCell || result.dayCell) {
-      // prevent clicking event
-      e.preventDefault()
+        // Stop propagation: We do not want to select a timecell while touch an event
+        e.stopImmediatePropagation();
+      } else if (result.timeCell || result.dayCell) {
+        // prevent clicking event
+        e.preventDefault()
 
-      // Stop propagation: We do not want to select a timecell while touch an event
-      e.stopImmediatePropagation();
+        // Stop propagation: We do not want to select a timecell while touch an event
+        e.stopImmediatePropagation();
+      }
     }
 
     if (touch) {
@@ -534,6 +536,7 @@ export function objectsCollide(nodeA, nodeB, tolerance = 0) {
  * @return {Object}
  */
 export function getBoundsForNode(node) {
+  console.log("getBoundsForNode", node);
   if (!node.getBoundingClientRect) return node
 
   let rect = node.getBoundingClientRect(),

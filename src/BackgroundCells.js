@@ -72,6 +72,10 @@ class BackgroundCells extends React.Component {
 
   _selectable() {
     let node = this.containerRef.current
+    const parent = node.parentElement.parentElement
+    console.log("BackgroundCells _selectable", node);
+    console.log("BackgroundCells _selectable, parent", parent);
+
     let selector = (this._selector = new Selection(this.props.container, {
       longPressThreshold: this.props.longPressThreshold,
     }))
@@ -98,7 +102,6 @@ class BackgroundCells extends React.Component {
     }
 
     selector.on('selecting', (box) => {
-      // console.log("selecting", {box})
       let { range, rtl } = this.props
 
       let startIdx = -1
@@ -128,13 +131,7 @@ class BackgroundCells extends React.Component {
     })
 
     selector.on('beforeSelect', (box) => {
-      if (this.props.selectable !== 'ignoreEvents') return {dayCell: true}
-
-      if(!isEvent(this.containerRef.current, box)) {
-        return {dayCell: true}
-      } else {
-        return {};
-      }
+      return
     })
 
     selector.on('click', (point) => selectorClicksHandler(point, 'click'))

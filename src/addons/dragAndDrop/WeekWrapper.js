@@ -133,9 +133,10 @@ class WeekWrapper extends React.Component {
   }
 
   _selectable = () => {
-    console.log('______SELECTABLE in WeekWrapper')
     let isBeingDragged = false
     let node = this.ref.current.closest('.rbc-month-row, .rbc-allday-cell')
+    console.log("WeekWrapper _selectable", node);
+
     let container = node.closest('.rbc-month-view, .rbc-time-view')
     let isMonthRow = node.classList.contains('rbc-month-row')
 
@@ -264,6 +265,9 @@ class WeekWrapper extends React.Component {
   }
 
   handleInteractionEnd = () => {
+    if(!this.state.segment)
+      return;
+
     const { resourceId, isAllDay } = this.props
     const { event } = this.state.segment
 
