@@ -67,6 +67,10 @@ class Selection {
     this._dragOverFromOutsideListener =
       this._dragOverFromOutsideListener.bind(this)
 
+
+    this._lastTapTime = 0; // Track time of last tap
+    this._isHolding = false; // Track if user is holding after double-tap
+
     // Fixes an iOS 10 bug where scrolling could not be prevented on the window.
     // https://github.com/metafizzy/flickity/issues/457#issuecomment-254501356
     this._removeTouchMoveWindowListener = addEventListener(
@@ -208,14 +212,33 @@ class Selection {
     }
   }
 
+  // Detect double-tap-and-hold gesture
+  _handleTouchStart(e) {
+    const now = Date.now();
+    const timeSinceLastTap = now - this._lastTapTime;
+
+    console.log({timeSinceLastTap, clickInterval})
+    if (timeSinceLastTap < clickInterval && timeSinceLastTap > 0) {
+      // Double-tap detected
+      this._isHolding = true;
+      this._handleInitialEvent(e);
+      e.preventDefault();
+    } else {
+      this._isHolding = false; // Reset if no double-tap
+    }
+
+    this._lastTapTime = now;
+  }
+
   // Listen for mousedown and touchstart events. When one is received, disable the other and setup
   // future event handling based on the type of event.
   _addInitialEventListener() {
     console.log('_addInitialEventListener call')
 
-    const removeMouseDownListener = addEventListener('mousedown', (e) => {
-      console.log("mousedown");
-      if (!this._onlyTouch) {
+    const removeMouseDownListener = addEventListener('pointerdown', (e) => {
+      if (!this._onlyTouch && e.pointerType === "mouse") {
+        console.log("mousedown");
+
         this._removeInitialEventListener()
         this._handleInitialEvent(e)
         this._removeInitialEventListener = addEventListener(
@@ -226,21 +249,28 @@ class Selection {
     })
 
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
-      this._onlyTouch = true
-      // console.log('touchstart')
-      this._handleInitialEvent(e)
-    })
+      console.log("touchstart")
+      this._onlyTouch = true;
+      this._handleTouchStart(e);
+    });
 
-    addEventListener('touchmove', (e) => {
-      // console.log('touchmove2')
-      this._handleMoveEvent(e)
-    })
+    const removeTouchMoveListener = addEventListener('touchmove', (e) => {
+      if(this._isHolding) {
+        this._handleMoveEvent(e);
+      }
+    });
 
-    addEventListener('touchend', (e) => this._handleEndMove(e))
+    const removeTouchEndListener = addEventListener('touchend', (e) => {
+      if(this._isHolding) {
+        this._handleEndMove(e);
+      }
+    });
 
     this._removeInitialEventListener = () => {
       removeMouseDownListener()
       removeTouchStartListener()
+      removeTouchMoveListener()
+      removeTouchEndListener()
     }
   }
 
@@ -271,6 +301,8 @@ class Selection {
   }
 
   _handleEndMove(e) {
+    this._isHolding = false;
+
     if(!this.selecting && this._initialEventData) {
       this.emit('click', this._initialEventData)
     } else {
