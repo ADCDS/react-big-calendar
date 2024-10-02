@@ -248,7 +248,7 @@ class EventContainerWrapper extends React.Component {
 
       // If no event was found, return null, that way we trigger the beforeSelect
       // In the sibling days in week view
-    }, {notMutuallyExclusive: true})
+    })
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
