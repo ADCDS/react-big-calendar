@@ -175,6 +175,7 @@ class EventContainerWrapper extends React.Component {
 
     console.log('______SELECTABLE', node)
     let isBeingDragged = false
+    let isInDayColumn = false
 
     let selector = (this._selector = new Selection(
       () => wrapper.closest('.rbc-time-view'),
@@ -185,6 +186,8 @@ class EventContainerWrapper extends React.Component {
     let parent = scrollParent(wrapper)
 
     selector.on('beforeSelect', (point, e) => {
+      isInDayColumn = pointInColumn(getBoundsForNode(node), point)
+
       console.log('EventContainerWrapper beforeSelect', node)
 
       const eventNode = getEventNodeFromPoint(node, point)
@@ -200,7 +203,7 @@ class EventContainerWrapper extends React.Component {
       const { dragAndDropAction } = this.context.draggable
 
       if (dragAndDropAction.action === 'resize') {
-        return pointInColumn(getBoundsForNode(node), point)
+        return isInDayColumn
       }
 
       const events = this.props.children.props.children
@@ -261,6 +264,9 @@ class EventContainerWrapper extends React.Component {
         this.handleMove(box, bounds)
       }
       if (dragAndDropAction.action === 'resize') {
+        if(!isInDayColumn)
+          return;
+
         this.updateParentScroll(parent, node)
         this.handleResize(box, bounds)
 
