@@ -133,7 +133,6 @@ class WeekWrapper extends React.Component {
   }
 
   _selectable = () => {
-    let isBeingDragged = false
     let node = this.ref.current.closest('.rbc-month-row, .rbc-allday-cell')
     console.log("WeekWrapper _selectable", node);
 
@@ -165,7 +164,6 @@ class WeekWrapper extends React.Component {
       }
 
       if (!pointInBox(bounds, point)) {
-        isBeingDragged = false;
         // Return undefined so DayColumn beforeSelect can be triggered
         return
       }
@@ -190,11 +188,8 @@ class WeekWrapper extends React.Component {
                 .getAttribute('class')
                 ?.includes('rbc-addons-dnd-resize')
               if (!isResizeHandle) {
-                isBeingDragged = true
                 this.context.draggable.onBeginAction(evtProp, 'move')
               } else {
-                isBeingDragged = true
-
                 let anchorDirection = e.target.dataset.anchorDirection
                 if (!anchorDirection) {
                   anchorDirection = e.target.parentNode.dataset.anchorDirection
@@ -216,9 +211,6 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('selecting', (box) => {
-      if(!isBeingDragged)
-        return;
-
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
@@ -250,11 +242,6 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('endMove', () => {
-      if(!isBeingDragged) {
-        return;
-      }
-
-      isBeingDragged = false
       const { dragAndDropAction } = this.context.draggable
 
       console.log("endMove", { dragAndDropAction});
@@ -262,7 +249,7 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('click', () => {
-      if (isBeingDragged) this.reset()
+      this.reset()
       this.context.draggable.onEnd(null)
     })
 
