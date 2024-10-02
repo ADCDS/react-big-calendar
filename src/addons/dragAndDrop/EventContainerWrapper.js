@@ -4,10 +4,7 @@ import { DnDContext } from './DnDContext'
 import { scrollParent, scrollTop } from 'dom-helpers'
 import qsa from 'dom-helpers/cjs/querySelectorAll'
 
-import Selection, {
-  getBoundsForNode,
-  getEventNodeFromPoint,
-} from '../../Selection'
+import Selection, { getBoundsForNode, getEventNodeFromPoint } from '../../Selection'
 import TimeGridEvent from '../../TimeGridEvent'
 import { dragAccessors, eventTimes, pointInColumn } from './common'
 
@@ -252,6 +249,11 @@ class EventContainerWrapper extends React.Component {
       // If no event was found, return null, that way we trigger the beforeSelect
       // In the sibling days in week view
     })
+
+    selector.on('probeEventDrag', (point) => {
+      isInDayColumn = pointInColumn(getBoundsForNode(node), point)
+      return getEventNodeFromPoint(node, point);
+    });
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)

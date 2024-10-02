@@ -217,8 +217,9 @@ class Selection {
     const now = Date.now();
     const timeSinceLastTap = now - this._lastTapTime;
 
-    console.log({timeSinceLastTap, clickInterval})
-    if (timeSinceLastTap < clickInterval && timeSinceLastTap > 0) {
+    const possibleEvent = this.emit('probeEventDrag', getEventCoordinates(e));
+
+    if (possibleEvent || (timeSinceLastTap < clickInterval && timeSinceLastTap > 0)) {
       // Double-tap detected
       this._isHolding = true;
       this._handleInitialEvent(e);
