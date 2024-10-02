@@ -136,26 +136,22 @@ class WeekWrapper extends React.Component {
     let node = this.ref.current.closest('.rbc-month-row, .rbc-allday-cell')
     console.log("WeekWrapper _selectable", node);
 
-    let container = node.closest('.rbc-month-view, .rbc-time-view')
-    let isMonthRow = node.classList.contains('rbc-month-row')
-
+    let isInBox = false;
     // Valid container check only necessary in TimeGrid views
     let selector = this._selector = this.context.draggable.selector;
 
     selector.on('beforeSelect', (point, e) => {
       console.log("WeekWrapper beforeSelect");
 
-      const { isAllDay } = this.props
-      const { action } = this.context.draggable.dragAndDropAction
       const bounds = getBoundsForNode(node)
-      const isInBox = pointInBox(bounds, point)
+      isInBox = pointInBox(bounds, point);
 
       if (this.context.draggable.dragAndDropAction.event) {
         // Already selecting an event
         return false
       }
 
-      if (!pointInBox(bounds, point)) {
+      if (!isInBox) {
         // Return undefined so DayColumn beforeSelect can be triggered
         return
       }
@@ -234,10 +230,14 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('endMove', () => {
-      const { dragAndDropAction } = this.context.draggable
+      if(isInBox) {
+        const { dragAndDropAction } = this.context.draggable
 
-      console.log("endMove", { dragAndDropAction});
-      this.handleInteractionEnd()
+        console.log("endMove", { dragAndDropAction });
+        this.handleInteractionEnd()
+
+        return true;
+      }
     })
 
     selector.on('click', () => {
