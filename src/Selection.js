@@ -288,6 +288,8 @@ class Selection {
       collides,
       offsetData
 
+    console.log("Selector node", node);
+
     // Right clicks
     if (
       e.which === 3 ||

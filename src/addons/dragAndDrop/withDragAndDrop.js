@@ -1,8 +1,9 @@
 import PropTypes from 'prop-types'
-import React from 'react'
+import React, { createRef } from 'react'
 import clsx from 'clsx'
 
 import { accessor } from '../../utils/propTypes'
+import Selection from '../../Selection'
 import EventWrapper from './EventWrapper'
 import EventContainerWrapper from './EventContainerWrapper'
 import WeekWrapper from './WeekWrapper'
@@ -40,11 +41,13 @@ export default function withDragAndDrop(Calendar) {
       super(...args)
 
       this.state = { interacting: false }
+      this.calendarRef = createRef()
     }
 
-    getDnDContextValue() {
+    getDnDContextValue(calendarRef) {
       return {
         draggable: {
+          selector: new Selection(() => this.calendarRef.current),
           onStart: this.handleInteractionStart,
           onEnd: this.handleInteractionEnd,
           onBeginAction: this.handleBeginAction,
@@ -120,13 +123,14 @@ export default function withDragAndDrop(Calendar) {
         !!interacting && 'rbc-addons-dnd-is-dragging'
       )
 
-      const context = this.getDnDContextValue()
+      const context = this.getDnDContextValue(this.calendarRef)
 
       // console.log('withDnD render', { context })
       return (
         <DnDContext.Provider value={context}>
           <Calendar
             {...props}
+            ref={this.calendarRef}
             elementProps={elementPropsWithDropFromOutside}
             components={this.components}
           />

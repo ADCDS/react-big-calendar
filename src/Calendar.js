@@ -43,7 +43,7 @@ function isValidView(view, { views: _views }) {
   return names.indexOf(view) !== -1
 }
 
-class Calendar extends React.Component {
+class InnerCalendar extends React.Component {
   static propTypes = {
     /**
      * The localizer used for formatting dates and times according to the `format` and `culture`
@@ -861,7 +861,7 @@ class Calendar extends React.Component {
      *
      * or custom `Function(events, minimumStartDifference, slotMetrics, accessors)`
      */
-    dayLayoutAlgorithm: DayLayoutAlgorithmPropType,
+    dayLayoutAlgorithm: DayLayoutAlgorithmPropType
   }
 
   static defaultProps = {
@@ -898,11 +898,11 @@ class Calendar extends React.Component {
     super(...args)
 
     this.state = {
-      context: Calendar.getContext(this.props),
+      context: InnerCalendar.getContext(this.props),
     }
   }
   static getDerivedStateFromProps(nextProps) {
-    return { context: Calendar.getContext(nextProps) }
+    return { context: InnerCalendar.getContext(nextProps) }
   }
 
   static getContext({
@@ -1036,6 +1036,7 @@ class Calendar extends React.Component {
         {...elementProps}
         className={clsx(className, 'rbc-calendar', props.rtl && 'rbc-rtl')}
         style={style}
+        ref={this.props.innerRef}
       >
         {toolbar && (
           <CalToolbar
@@ -1153,6 +1154,12 @@ class Calendar extends React.Component {
     this.handleNavigate(navigate.DATE, date)
   }
 }
+
+const Calendar = React.forwardRef((props, ref) =>
+  <InnerCalendar
+    innerRef={ref} {...props}
+  />
+);
 
 export default uncontrollable(Calendar, {
   view: 'onView',

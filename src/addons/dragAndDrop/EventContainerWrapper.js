@@ -263,6 +263,8 @@ class EventContainerWrapper extends React.Component {
       if (dragAndDropAction.action === 'resize') {
         this.updateParentScroll(parent, node)
         this.handleResize(box, bounds)
+
+        return true // Avoid calling WeekWrapper's selecting callback
       }
     })
 

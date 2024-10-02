@@ -76,9 +76,7 @@ class BackgroundCells extends React.Component {
   _selectable() {
     let node = this.containerRef.current
 
-    let selector = (this._selector = new Selection(this.props.container, {
-      longPressThreshold: this.props.longPressThreshold,
-    }))
+    let selector = this._selector = this.context.draggable.selector;
 
     let selectorClicksHandler = (point, actionType) => {
       if (!isEvent(node, point) && !isShowMore(node, point)) {

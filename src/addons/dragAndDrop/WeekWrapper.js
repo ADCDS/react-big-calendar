@@ -140,15 +140,7 @@ class WeekWrapper extends React.Component {
     let isMonthRow = node.classList.contains('rbc-month-row')
 
     // Valid container check only necessary in TimeGrid views
-    let selector = (this._selector = new Selection(
-      () => container,
-      {
-        validContainers: [
-          ...(!isMonthRow ? ['.rbc-day-slot', '.rbc-allday-cell'] : []),
-        ],
-      },
-      this.context
-    ))
+    let selector = this._selector = this.context.draggable.selector;
 
     selector.on('beforeSelect', (point, e) => {
       console.log("WeekWrapper beforeSelect");
