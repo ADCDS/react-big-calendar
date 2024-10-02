@@ -312,13 +312,18 @@ class DayColumn extends React.Component {
           box,
         })
 
-        this.notifySelectSlot()
+        this.notifySelectSlot({
+          startDate,
+          endDate,
+          action: actionType,
+          box
+        })
       }
       this.setState({ selecting: false })
     }
 
     selector.on('beforeSelect', (box) => {
-      console.log("DayColumn beforeSelect");
+      // console.log("DayColumn beforeSelect");
       if (this.props.selectable !== 'ignoreEvents') return {timeCell: true}
 
       if(!isEvent(this.containerRef.current, box)) {
@@ -337,7 +342,7 @@ class DayColumn extends React.Component {
     selector.on('selecting', (bounds) => {
       const { event } = this.context.draggable.dragAndDropAction
 
-      console.log("DayColumn selecting", {event})
+      // console.log("DayColumn selecting", {event})
       if(event)
         return;
 
@@ -372,7 +377,7 @@ class DayColumn extends React.Component {
       if(!this.state.selecting)
         return;
 
-      this.notifySelectSlot()
+      this.notifySelectSlot(this.state)
     })
 
     selector.on('reset', () => {
@@ -382,16 +387,14 @@ class DayColumn extends React.Component {
     })
   }
 
-  notifySelectSlot() {
-    const { endDate, startDate, action, bounds, box } = this.state
-
+  notifySelectSlot({ endDate, startDate, action, bounds, box }) {
     this.setState({ selecting: false })
     notify(this.props.onSelectSlot, {
       slots: this._selectedSlots,
       start: startDate,
       end: endDate,
       resourceId: this.props.resource,
-      action: 'select',
+      action: action,
       bounds,
       box,
     })

@@ -4,7 +4,7 @@ import clsx from 'clsx'
 
 import { notify } from './utils/helpers'
 import { dateCellSelection, getSlotAtX, pointInBox } from './utils/selection'
-import Selection, { getBoundsForNode, isEvent, isShowMore } from './Selection'
+import { getBoundsForNode, isEvent, isShowMore } from './Selection'
 import { DnDContext } from './addons/dragAndDrop/DnDContext'
 
 class BackgroundCells extends React.Component {
@@ -73,8 +73,14 @@ class BackgroundCells extends React.Component {
     )
   }
 
+  getSlotsInRange(start, end) {
+    const { range } = this.props
+    return range.slice(start, end + 1)
+  }
+
   _selectable() {
     let node = this.containerRef.current
+    console.log("BackgroundCells _selectable", node);
 
     let selector = this._selector = this.context.draggable.selector;
 
@@ -87,8 +93,7 @@ class BackgroundCells extends React.Component {
           let currentCell = getSlotAtX(rowBox, point.x, rtl, range.length)
 
           this._selectSlot({
-            startIdx: currentCell,
-            endIdx: currentCell,
+            slots: this.getSlotsInRange(currentCell, currentCell),
             action: actionType,
             box: point,
           })
@@ -140,12 +145,27 @@ class BackgroundCells extends React.Component {
       selectorClicksHandler(point, 'doubleClick')
     )
 
-    selector.on('endMove', (bounds) => {
+    selector.on('clearBackgroundCells', () => {
+      const { startIdx, endIdx } = this.state
+      this.setState({ selecting: false })
+
+      return this.getSlotsInRange(startIdx, endIdx);
+    }, {executeAll: true})
+
+    selector.on('endMove', () => {
+      console.log("BackgroundCells endMove", node);
       if(!this.state.selecting)
         return;
 
-      // console.log("state", this.state)
-      this._selectSlot({ ...this.state, action: 'select' })
+      // Clear other background cells:
+      const dates = selector.emit('clearBackgroundCells').flat();
+
+      this._selectSlot({
+        ...this.state,
+        action: 'select',
+        slots: dates
+      });
+
       this._initial = {}
       this.setState({ selecting: false })
       notify(this.props.onSelectEnd, [this.state])
@@ -158,17 +178,17 @@ class BackgroundCells extends React.Component {
     this._selector = null
   }
 
-  _selectSlot({ endIdx, startIdx, action, bounds, box }) {
-    if (endIdx !== -1 && startIdx !== -1)
+  _selectSlot({ slots, action, bounds, box }) {
+    if (slots.length > 0)
       this.props.onSelectSlot &&
         this.props.onSelectSlot({
-          start: startIdx,
-          end: endIdx,
           action,
           bounds,
           box,
           resourceId: this.props.resourceId,
-        })
+        },
+        slots
+      )
   }
 }
 

@@ -44,7 +44,7 @@ export default function withDragAndDrop(Calendar) {
       this.calendarRef = createRef()
     }
 
-    getDnDContextValue(calendarRef) {
+    getDnDContextValue() {
       return {
         draggable: {
           selector: new Selection(() => this.calendarRef.current),

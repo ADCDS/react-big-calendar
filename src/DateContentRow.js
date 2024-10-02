@@ -22,10 +22,10 @@ class DateContentRow extends React.Component {
     this.slotMetrics = DateSlotMetrics.getSlotMetrics()
   }
 
-  handleSelectSlot = (slot) => {
-    const { range, onSelectSlot } = this.props
+  handleSelectSlot = (slotInfo, selectedSlots) => {
+    const { onSelectSlot } = this.props
 
-    onSelectSlot(range.slice(slot.start, slot.end + 1), slot)
+    onSelectSlot(slotInfo, selectedSlots)
   }
 
   handleShowMore = (slot, target) => {

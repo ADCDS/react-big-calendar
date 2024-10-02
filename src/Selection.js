@@ -110,15 +110,22 @@ class Selection {
     let handlers = this._listeners[type] || []
 
     handlers.forEach(({_fn, options}) => {
-      if (result === undefined) {
-        result = _fn(...args)
+      if (result === undefined || options.executeAll) {
+        if(options.executeAll) {
+          if(!result) {
+            result = [];
+          }
+
+          result.push(_fn(...args));
+        } else {
+          result = _fn(...args)
+        }
       }
     })
     return result
   }
 
   teardown() {
-    this._initialEvent = null
     this._initialEventData = null
     this._selectRect = null
     this._onlyTouch = false
@@ -437,7 +444,8 @@ class Selection {
         bottom: top + h,
       }
 
-      const ret = this.emit('selecting', this._selectRect)
+      this.emit('selecting', this._selectRect)
+      e.preventDefault();
     }
   }
 

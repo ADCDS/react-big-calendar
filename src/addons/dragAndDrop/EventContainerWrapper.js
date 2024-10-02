@@ -255,13 +255,13 @@ class EventContainerWrapper extends React.Component {
 
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
-      const { dragAndDropAction } = this.context.draggable
-
-      console.log('EventContainerWrapper selecting', node)
+      const { dragAndDropAction } = this.context.draggable;
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
         this.handleMove(box, bounds)
+
+        return true // Avoid calling WeekWrapper's selecting callback
       }
       if (dragAndDropAction.action === 'resize') {
         if(!isInDayColumn)

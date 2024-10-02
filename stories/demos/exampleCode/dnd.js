@@ -1,4 +1,4 @@
-import React, { Fragment, useCallback, useMemo, useState } from 'react'
+import React, { Fragment, useCallback, useMemo, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import events from '../../resources/events'
 import { Calendar, Views, DateLocalizer } from 'react-big-calendar'
@@ -10,7 +10,14 @@ import '../../../src/addons/dragAndDrop/styles.scss'
 
 const DragAndDropCalendar = withDragAndDrop(Calendar)
 
+function buildMessage(slotInfo) {
+  return `[onSelectSlot] a date selection was made, passing 'slotInfo'
+  ${JSON.stringify(slotInfo, null, 2)}`
+}
+
+
 export default function DragAndDrop({ localizer }) {
+  const clickRef = useRef(null)
   const [myEvents, setMyEvents] = useState(events)
 
   const moveEvent = useCallback(
@@ -43,13 +50,27 @@ export default function DragAndDrop({ localizer }) {
     [setMyEvents]
   )
 
+  const onSelectSlot = useCallback((slotInfo) => {
+    /**
+     * Here we are waiting 250 milliseconds prior to firing
+     * our method. Why? Because both 'click' and 'doubleClick'
+     * would fire, in the event of a 'doubleClick'. By doing
+     * this, the 'click' handler is overridden by the 'doubleClick'
+     * action.
+     */
+    window.clearTimeout(clickRef?.current)
+    clickRef.current = window.setTimeout(() => {
+      window.alert(buildMessage(slotInfo))
+    }, 250)
+  }, [])
+
   const defaultDate = useMemo(() => new Date(2015, 3, 13), [])
 
   return (
     <Fragment>
       <DemoLink fileName="dnd">
         <strong>
-          Drag and Drop an "event" from one slot to another to "move" the event,
+          Drag 1and Drop an "event" from one slot to another to "move" the event,
           or drag an event's drag handles to "resize" the event.
         </strong>
       </DemoLink>
@@ -62,6 +83,7 @@ export default function DragAndDrop({ localizer }) {
           onEventDrop={moveEvent}
           onEventResize={resizeEvent}
           selectable={true}
+          onSelectSlot={onSelectSlot}
           popup
           resizable
         />

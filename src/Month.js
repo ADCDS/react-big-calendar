@@ -32,9 +32,6 @@ class MonthView extends React.Component {
     }
     this.containerRef = createRef()
     this.slotRowRef = createRef()
-
-    this._bgRows = []
-    this._pendingSelection = []
   }
 
   static getDerivedStateFromProps({ date, localizer }, state) {
@@ -149,7 +146,7 @@ class MonthView extends React.Component {
         onSelect={this.handleSelectEvent}
         onDoubleClick={this.handleDoubleClickEvent}
         onKeyPress={this.handleKeyPressEvent}
-        onSelectSlot={this.handleSelectSlot}
+        onSelectSlot={(slotInfo, slots) => this.selectDates(slotInfo, slots)}
         longPressThreshold={longPressThreshold}
         rtl={this.props.rtl}
         resizable={this.props.resizable}
@@ -277,31 +274,20 @@ class MonthView extends React.Component {
     })
   }
 
-  handleSelectSlot = (range, slotInfo) => {
-    this._pendingSelection = this._pendingSelection.concat(range)
-
-    clearTimeout(this._selectTimer)
-    this._selectTimer = setTimeout(() => this.selectDates(slotInfo))
-  }
-
   handleHeadingClick = (date, view, e) => {
     e.preventDefault()
-    this.clearSelection()
     notify(this.props.onDrillDown, [date, view])
   }
 
   handleSelectEvent = (...args) => {
-    this.clearSelection()
     notify(this.props.onSelectEvent, args)
   }
 
   handleDoubleClickEvent = (...args) => {
-    this.clearSelection()
     notify(this.props.onDoubleClickEvent, args)
   }
 
   handleKeyPressEvent = (...args) => {
-    this.clearSelection()
     notify(this.props.onKeyPressEvent, args)
   }
 
@@ -314,7 +300,6 @@ class MonthView extends React.Component {
       doShowMoreDrillDown,
     } = this.props
     //cancel any pending selections so only the event click goes through.
-    this.clearSelection()
 
     if (popup) {
       let position = getPosition(cell, this.containerRef.current)
@@ -335,11 +320,7 @@ class MonthView extends React.Component {
     })
   }
 
-  selectDates(slotInfo) {
-    let slots = this._pendingSelection.slice()
-
-    this._pendingSelection = []
-
+  selectDates(slotInfo, slots) {
     slots.sort((a, b) => +a - +b)
 
     const start = new Date(slots[0])
@@ -354,11 +335,6 @@ class MonthView extends React.Component {
       bounds: slotInfo.bounds,
       box: slotInfo.box,
     })
-  }
-
-  clearSelection() {
-    clearTimeout(this._selectTimer)
-    this._pendingSelection = []
   }
 }
 
