@@ -4,7 +4,7 @@ import EventRow from '../../EventRow'
 import Selection, { getBoundsForNode, getEventNodeFromPoint } from '../../Selection'
 import { eventSegments } from '../../utils/eventLevels'
 import { getSlotAtX, pointInBox } from '../../utils/selection'
-import { dragAccessors, eventTimes } from './common'
+import { dragAccessors, eventTimes, pointInColumn } from './common'
 import { DnDContext } from './DnDContext'
 
 class WeekWrapper extends React.Component {
@@ -140,6 +140,10 @@ class WeekWrapper extends React.Component {
     // Valid container check only necessary in TimeGrid views
     let selector = this._selector = this.context.draggable.selector;
 
+    selector.on('probeEventDrag', (point) => {
+      return getEventNodeFromPoint(node, point);
+    });
+
     selector.on('beforeSelect', (point, e) => {
       // console.log("WeekWrapper beforeSelect");
 
@@ -230,14 +234,7 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('endMove', () => {
-      if(isInBox) {
-        const { dragAndDropAction } = this.context.draggable
-
-        // console.log("endMove", { dragAndDropAction });
-        this.handleInteractionEnd()
-
-        return true;
-      }
+      this.handleInteractionEnd()
     })
 
     selector.on('click', () => {
