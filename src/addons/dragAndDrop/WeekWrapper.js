@@ -49,10 +49,11 @@ class WeekWrapper extends React.Component {
 
     const { segment: lastSegment } = this.state
     if (
-      lastSegment &&
-      segment.span === lastSegment.span &&
-      segment.left === lastSegment.left &&
-      segment.right === lastSegment.right
+      (lastSegment &&
+        segment.span === lastSegment.span &&
+        segment.left === lastSegment.left &&
+        segment.right === lastSegment.right)
+      || segment.left === 0
     ) {
       return
     }
@@ -134,14 +135,13 @@ class WeekWrapper extends React.Component {
 
   _selectable = () => {
     let node = this.ref.current.closest('.rbc-month-row, .rbc-allday-cell')
-    console.log("WeekWrapper _selectable", node);
 
     let isInBox = false;
     // Valid container check only necessary in TimeGrid views
     let selector = this._selector = this.context.draggable.selector;
 
     selector.on('beforeSelect', (point, e) => {
-      console.log("WeekWrapper beforeSelect");
+      // console.log("WeekWrapper beforeSelect");
 
       const bounds = getBoundsForNode(node)
       isInBox = pointInBox(bounds, point);
@@ -202,7 +202,7 @@ class WeekWrapper extends React.Component {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 
-      console.log('WeekWrapper selecting', { box, dragAndDropAction })
+      // console.log('WeekWrapper selecting', { box, dragAndDropAction })
 
       if (dragAndDropAction.action === 'move') {
         this.handleMove(box, bounds)
@@ -233,7 +233,7 @@ class WeekWrapper extends React.Component {
       if(isInBox) {
         const { dragAndDropAction } = this.context.draggable
 
-        console.log("endMove", { dragAndDropAction });
+        // console.log("endMove", { dragAndDropAction });
         this.handleInteractionEnd()
 
         return true;

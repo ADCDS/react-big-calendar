@@ -80,7 +80,7 @@ class BackgroundCells extends React.Component {
 
   _selectable() {
     let node = this.containerRef.current
-    console.log("BackgroundCells _selectable", node);
+    // console.log("BackgroundCells _selectable", node);
 
     let selector = this._selector = this.context.draggable.selector;
 
@@ -107,7 +107,7 @@ class BackgroundCells extends React.Component {
     selector.on('selecting', (box) => {
       const { event } = this.context.draggable.dragAndDropAction
 
-      console.log("BackgroundCells selecting", {event})
+      // console.log("BackgroundCells selecting", {event})
       if(event)
         return;
 
@@ -153,7 +153,7 @@ class BackgroundCells extends React.Component {
     }, {executeAll: true})
 
     selector.on('endMove', () => {
-      console.log("BackgroundCells endMove", node);
+      // console.log("BackgroundCells endMove", node);
       if(!this.state.selecting)
         return;
 

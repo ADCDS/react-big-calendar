@@ -328,7 +328,7 @@ class Selection {
       collides,
       offsetData
 
-    console.log("Selector node", node);
+    // console.log("Selector node", node);
 
     // Right clicks
     if (
