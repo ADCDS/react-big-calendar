@@ -4,7 +4,7 @@ import clsx from 'clsx'
 
 import Selection, { getBoundsForNode, isEvent } from './Selection'
 import * as TimeSlotUtils from './utils/TimeSlots'
-import { isSelected } from './utils/selection'
+import { isSelected, pointInBox } from './utils/selection'
 
 import { notify } from './utils/helpers'
 import * as DayEventLayout from './utils/DayEventLayout'
@@ -341,6 +341,12 @@ class DayColumn extends React.Component {
     )
 
     selector.on('selecting', (bounds) => {
+      const nodeBounds = getBoundsForNode(node)
+      if (!pointInBox(nodeBounds, bounds))
+        return;
+
+      console.log("Daycolumn selecting", node);
+
       const { event } = this.context.draggable.dragAndDropAction
 
       // console.log("DayColumn selecting", {event})

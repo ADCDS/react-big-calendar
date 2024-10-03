@@ -185,8 +185,6 @@ class EventContainerWrapper extends React.Component {
     selector.on('beforeSelect', (point, e) => {
       isInDayColumn = pointInColumn(getBoundsForNode(node), point)
 
-      console.log('EventContainerWrapper beforeSelect', node)
-
       const eventNode = getEventNodeFromPoint(node, point)
       if (!eventNode) return false
 
@@ -311,18 +309,6 @@ class EventContainerWrapper extends React.Component {
         this.context.draggable.onEnd(this.state.event)
         this.reset()
       }
-    })
-  }
-
-  handleInteractionEnd = () => {
-    const { resource } = this.props
-    const { event } = this.state
-    this.reset()
-
-    this.context.draggable.onEnd({
-      start: event.start,
-      end: event.end,
-      resourceId: resource,
     })
   }
 
