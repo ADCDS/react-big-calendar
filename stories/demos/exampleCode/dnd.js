@@ -50,7 +50,10 @@ export default function DragAndDrop({ localizer }) {
     [setMyEvents]
   )
 
-  const onSelectSlot = useCallback((slotInfo) => {
+  const onSelectSlot = useCallback((slotInfo, event, metadata) => {
+    if(metadata?.dryRun)
+      return;
+
     /**
      * Here we are waiting 250 milliseconds prior to firing
      * our method. Why? Because both 'click' and 'doubleClick'

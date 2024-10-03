@@ -19,13 +19,13 @@ function TimeGridEvent(props) {
     continuesAfter,
     getters,
     onPointerDown,
-    onDoubleClick,
     isBackgroundEvent,
     onKeyPress,
     components: { event: Event, eventWrapper: EventWrapper },
   } = props
 
   const [pointerDownTimeout, setPointerDownTimeout] = useState(null)
+  const [lastTap, setLastTap] = useState(0) // To store the timestamp of the last tap
 
   let title = accessors.title(event)
   let tooltip = accessors.tooltip(event)
@@ -66,8 +66,26 @@ function TimeGridEvent(props) {
     if (pointerDownTimeout) {
       clearTimeout(pointerDownTimeout)
       setPointerDownTimeout(null)
-      if (onPointerDown) {
-        onPointerDown(e)
+
+      if (e.pointerType === 'touch') {
+        const currentTime = new Date().getTime()
+        const tapGap = currentTime - lastTap
+
+        if (tapGap < 300 && tapGap > 0) {
+          // If a double-tap is detected (within 300ms), trigger onPointerDown
+          if (onPointerDown) {
+            onPointerDown(e)
+          }
+        } else {
+          onPointerDown(e, {dryRun: true})
+        }
+
+        setLastTap(currentTime)
+      } else {
+        // For non-touch devices (mouse), trigger onPointerDown immediately
+        if (onPointerDown) {
+          onPointerDown(e)
+        }
       }
     }
   }
@@ -87,7 +105,6 @@ function TimeGridEvent(props) {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
-        onDoubleClick={onDoubleClick}
         style={eventStyle}
         onKeyDown={onKeyPress}
         title={

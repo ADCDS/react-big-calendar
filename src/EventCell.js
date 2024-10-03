@@ -6,25 +6,43 @@ class EventCell extends React.Component {
   constructor(props) {
     super(props)
     this.pointerDownTimeout = null
+    this.lastTap = 0 // to store the timestamp of the last tap on touch devices
   }
 
   handlePointerDown = (event, e) => {
     // Start a timeout to detect if the user holds the click/touch for too long
     this.pointerDownTimeout = setTimeout(() => {
-      // If the user holds down the pointer long enough, clear the timeout
-      // to avoid triggering the onSelect event
-      this.pointerDownTimeout = null
+      this.pointerDownTimeout = null // Clear timeout if the user holds down
     }, 200) // 200ms is a typical threshold for distinguishing a click from a hold
   }
 
   handlePointerUp = (event, e) => {
-    // If the timeout is still active, it means the user released quickly
+    // If the timeout is still active, it means the user released quickly (i.e., clicked)
     if (this.pointerDownTimeout) {
       clearTimeout(this.pointerDownTimeout)
       this.pointerDownTimeout = null
-      // Trigger the onSelect event
-      if (this.props.onSelect) {
-        this.props.onSelect(event, e)
+
+      // Check pointer type to differentiate between touch and mouse
+      if (e.pointerType === 'touch') {
+        const currentTime = new Date().getTime()
+        const tapGap = currentTime - this.lastTap
+
+        if (tapGap < 300 && tapGap > 0) {
+          // If a double-tap is detected (within 300ms), trigger onSelect
+          if (this.props.onSelect) {
+            this.props.onSelect(event, e)
+          }
+        } else {
+          this.props.onSelect(event, e, {dryRun: true}) // Just selects the event to display the interactive buttons
+        }
+
+        this.lastTap = currentTime // Update lastTap time
+
+      } else {
+        // For non-touch devices (mouse), trigger onSelect immediately
+        if (this.props.onSelect) {
+          this.props.onSelect(event, e)
+        }
       }
     }
   }

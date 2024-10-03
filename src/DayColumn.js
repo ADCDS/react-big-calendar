@@ -243,7 +243,7 @@ class DayColumn extends React.Component {
           accessors={accessors}
           resource={this.props.resource}
           selected={isSelected(event, selected)}
-          onPointerDown={(e) =>
+          onPointerDown={(e, ...args) =>
             this._select(
               {
                 ...event,
@@ -252,7 +252,8 @@ class DayColumn extends React.Component {
                 }),
                 ...(isBackgroundEvent && { isBackgroundEvent: true }),
               },
-              e
+              e,
+              ...args
             )
           }
           onDoubleClick={(e) => this._doubleClick(event, e)}
