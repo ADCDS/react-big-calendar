@@ -84,6 +84,7 @@ export default function DragAndDrop({ localizer }) {
           onEventResize={resizeEvent}
           selectable={true}
           onSelectSlot={onSelectSlot}
+          onSelectEvent={onSelectSlot}
           popup
           resizable
         />

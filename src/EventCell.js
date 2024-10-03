@@ -3,6 +3,40 @@ import React from 'react'
 import clsx from 'clsx'
 
 class EventCell extends React.Component {
+  constructor(props) {
+    super(props)
+    this.pointerDownTimeout = null
+  }
+
+  handlePointerDown = (event, e) => {
+    // Start a timeout to detect if the user holds the click/touch for too long
+    this.pointerDownTimeout = setTimeout(() => {
+      // If the user holds down the pointer long enough, clear the timeout
+      // to avoid triggering the onSelect event
+      this.pointerDownTimeout = null
+    }, 200) // 200ms is a typical threshold for distinguishing a click from a hold
+  }
+
+  handlePointerUp = (event, e) => {
+    // If the timeout is still active, it means the user released quickly
+    if (this.pointerDownTimeout) {
+      clearTimeout(this.pointerDownTimeout)
+      this.pointerDownTimeout = null
+      // Trigger the onSelect event
+      if (this.props.onSelect) {
+        this.props.onSelect(event, e)
+      }
+    }
+  }
+
+  handlePointerLeave = () => {
+    // Clear the timeout if the pointer leaves the element before the release
+    if (this.pointerDownTimeout) {
+      clearTimeout(this.pointerDownTimeout)
+      this.pointerDownTimeout = null
+    }
+  }
+
   render() {
     let {
       style,
@@ -10,7 +44,6 @@ class EventCell extends React.Component {
       event,
       selected,
       isAllDay,
-      onSelect,
       onDoubleClick,
       onKeyPress,
       localizer,
@@ -69,7 +102,9 @@ class EventCell extends React.Component {
             'rbc-event-continues-prior': continuesPrior,
             'rbc-event-continues-after': continuesAfter,
           })}
-          onPointerDown={(e) => onSelect && onSelect(event, e)}
+          onPointerDown={(e) => this.handlePointerDown(event, e)}
+          onPointerUp={(e) => this.handlePointerUp(event, e)}
+          onPointerLeave={this.handlePointerLeave}
           onDoubleClick={(e) => onDoubleClick && onDoubleClick(event, e)}
           onKeyDown={(e) => onKeyPress && onKeyPress(event, e)}
         >

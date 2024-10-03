@@ -1,5 +1,5 @@
 import clsx from 'clsx'
-import React from 'react'
+import React, { useState } from 'react'
 
 function stringifyPercent(v) {
   return typeof v === 'string' ? v : v + '%'
@@ -24,6 +24,9 @@ function TimeGridEvent(props) {
     onKeyPress,
     components: { event: Event, eventWrapper: EventWrapper },
   } = props
+
+  const [pointerDownTimeout, setPointerDownTimeout] = useState(null)
+
   let title = accessors.title(event)
   let tooltip = accessors.tooltip(event)
   let end = accessors.end(event)
@@ -50,12 +53,40 @@ function TimeGridEvent(props) {
     [rtl ? 'right' : 'left']: stringifyPercent(xOffset),
   }
 
+  // Handle pointer down and hold
+  const handlePointerDown = (e) => {
+    const timeout = setTimeout(() => {
+      setPointerDownTimeout(null)
+    }, 200) // Timeout to distinguish click from hold (200ms)
+
+    setPointerDownTimeout(timeout)
+  }
+
+  const handlePointerUp = (e) => {
+    if (pointerDownTimeout) {
+      clearTimeout(pointerDownTimeout)
+      setPointerDownTimeout(null)
+      if (onPointerDown) {
+        onPointerDown(e)
+      }
+    }
+  }
+
+  const handlePointerLeave = () => {
+    if (pointerDownTimeout) {
+      clearTimeout(pointerDownTimeout)
+      setPointerDownTimeout(null)
+    }
+  }
+
   return (
     <EventWrapper type="time" {...props}>
       <div
         role="button"
         tabIndex={0}
-        onPointerDown={onPointerDown}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
         onDoubleClick={onDoubleClick}
         style={eventStyle}
         onKeyDown={onKeyPress}
