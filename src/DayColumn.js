@@ -243,7 +243,7 @@ class DayColumn extends React.Component {
           accessors={accessors}
           resource={this.props.resource}
           selected={isSelected(event, selected)}
-          onClick={(e) =>
+          onPointerDown={(e) =>
             this._select(
               {
                 ...event,

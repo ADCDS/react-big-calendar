@@ -18,7 +18,7 @@ function TimeGridEvent(props) {
     continuesPrior,
     continuesAfter,
     getters,
-    onClick,
+    onPointerDown,
     onDoubleClick,
     isBackgroundEvent,
     onKeyPress,
@@ -55,7 +55,7 @@ function TimeGridEvent(props) {
       <div
         role="button"
         tabIndex={0}
-        onClick={onClick}
+        onPointerDown={onPointerDown}
         onDoubleClick={onDoubleClick}
         style={eventStyle}
         onKeyDown={onKeyPress}

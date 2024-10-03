@@ -69,7 +69,7 @@ class EventCell extends React.Component {
             'rbc-event-continues-prior': continuesPrior,
             'rbc-event-continues-after': continuesAfter,
           })}
-          onClick={(e) => onSelect && onSelect(event, e)}
+          onPointerDown={(e) => onSelect && onSelect(event, e)}
           onDoubleClick={(e) => onDoubleClick && onDoubleClick(event, e)}
           onKeyDown={(e) => onKeyPress && onKeyPress(event, e)}
         >
