@@ -17,6 +17,7 @@ class EventCell extends React.Component {
   }
 
   handlePointerUp = (event, e) => {
+    // console.log("EventCell handlePointerUp");
     // If the timeout is still active, it means the user released quickly (i.e., clicked)
     if (this.pointerDownTimeout) {
       clearTimeout(this.pointerDownTimeout)

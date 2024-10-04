@@ -63,6 +63,8 @@ function TimeGridEvent(props) {
   }
 
   const handlePointerUp = (e) => {
+    // console.log("TimeGridEvent handlePointerUp")
+
     if (pointerDownTimeout) {
       clearTimeout(pointerDownTimeout)
       setPointerDownTimeout(null)

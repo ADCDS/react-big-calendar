@@ -203,13 +203,16 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('selecting', (box) => {
-      if (!isInBox) {
+      const bounds = getBoundsForNode(node)
+      const { dragAndDropAction } = this.context.draggable
+
+      // If we are on month view this.props.isAllDay === true, in that case
+      // We need to proc selecting in all weeks so the user can move/resize
+      // multi-days events
+      if (!isInBox && this.props.isAllDay) {
         // Return undefined so DayColumn beforeSelect can be triggered
         return
       }
-
-      const bounds = getBoundsForNode(node)
-      const { dragAndDropAction } = this.context.draggable
 
       // console.log('WeekWrapper selecting', { box, dragAndDropAction })
 
