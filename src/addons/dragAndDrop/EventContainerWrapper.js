@@ -170,7 +170,7 @@ class EventContainerWrapper extends React.Component {
     let wrapper = this.ref.current
     let node = wrapper.children[0]
 
-    console.log('______SELECTABLE', node)
+    // console.log('______SELECTABLE', node)
     let isBeingDragged = false
     let isInDayColumn = false
 

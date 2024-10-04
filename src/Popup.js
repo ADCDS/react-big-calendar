@@ -94,7 +94,7 @@ function Pop({
           slotEnd={slotEnd}
           selected={isSelected(event, selected)}
           draggable={true}
-          onDragStart={() => handleDragStart(event)}
+          onDragStart={() => handleDragStart && handleDragStart(event)}
           onDragEnd={() => show()}
         />
       ))}
