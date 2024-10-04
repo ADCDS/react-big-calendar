@@ -203,6 +203,11 @@ class WeekWrapper extends React.Component {
     })
 
     selector.on('selecting', (box) => {
+      if (!isInBox) {
+        // Return undefined so DayColumn beforeSelect can be triggered
+        return
+      }
+
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable
 

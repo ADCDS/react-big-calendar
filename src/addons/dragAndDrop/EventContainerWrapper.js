@@ -186,6 +186,8 @@ class EventContainerWrapper extends React.Component {
       isInDayColumn = pointInColumn(getBoundsForNode(node), point)
 
       const eventNode = getEventNodeFromPoint(node, point)
+      console.log({eventNode});
+
       if (!eventNode) return false
 
       this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
@@ -256,6 +258,8 @@ class EventContainerWrapper extends React.Component {
     selector.on('selecting', (box) => {
       const bounds = getBoundsForNode(node)
       const { dragAndDropAction } = this.context.draggable;
+
+      // console.log("EventContainerWrapper selecting", node);
 
       if (dragAndDropAction.action === 'move') {
         this.updateParentScroll(parent, node)
