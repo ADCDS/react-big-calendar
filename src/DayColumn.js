@@ -345,7 +345,7 @@ class DayColumn extends React.Component {
       if (!pointInBox(nodeBounds, bounds))
         return;
 
-      console.log("Daycolumn selecting", node);
+      // console.log("Daycolumn selecting", node);
 
       const { event } = this.context.draggable.dragAndDropAction
 

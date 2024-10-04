@@ -2,7 +2,7 @@ import isEqual from 'lodash/isEqual'
 
 export function isSelected(event, selected) {
   if (!event || selected == null) return false
-  return isEqual(event, selected)
+  return event.id === selected.id
 }
 
 export function slotWidth(rowBox, slots) {

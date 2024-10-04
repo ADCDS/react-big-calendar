@@ -186,7 +186,7 @@ class EventContainerWrapper extends React.Component {
       isInDayColumn = pointInColumn(getBoundsForNode(node), point)
 
       const eventNode = getEventNodeFromPoint(node, point)
-      console.log({eventNode});
+      // console.log({eventNode});
 
       if (!eventNode) return false
 

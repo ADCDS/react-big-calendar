@@ -61,7 +61,8 @@
       display: none;
       width: 16px; /* Set width for the ball */
       height: 16px; /* Set height for the ball */
-      background-color: #000; /* Adjust the color */
+      background-color: rgb(128 255 0 / 80%);
+      border: 1px solid #000;
       border-radius: 50%; /* Make it a ball */
       cursor: ns-resize;
       position: relative;
@@ -75,17 +76,18 @@
     transform: translateY(-50%); /* Ensure perfect vertical centering */
 
     &:first-child {
-      left: -10px; /* Move the ball slightly outside the left edge */
+      left: -12px; /* Move the ball slightly outside the left edge */
     }
     &:last-child {
-      right: -10px; /* Move the ball slightly outside the right edge */
+      right: -12px; /* Move the ball slightly outside the right edge */
     }
 
     .rbc-addons-dnd-resize-ew-icon {
       display: none;
       width: 16px; /* Set width for the ball */
       height: 16px; /* Set height for the ball */
-      background-color: #000; /* Adjust the color */
+      background-color: rgb(128 255 0 / 80%);
+      border: 1px solid #000;
       border-radius: 50%; /* Make it a ball */
       cursor: ew-resize;
       position: relative;

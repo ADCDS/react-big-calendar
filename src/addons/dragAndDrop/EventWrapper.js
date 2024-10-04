@@ -91,7 +91,7 @@ class EventWrapper extends React.Component {
     if (isResizable || isDraggable) {
       /*
        * props.children is the singular <Event> component.
-       * BigCalendar positions the Event abolutely and we
+       * BigCalendar positions the Event absolutely and we
        * need the anchors to be part of that positioning.
        * So we insert the anchors inside the Event's children
        * rather than wrap the Event here as the latter approach

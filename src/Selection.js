@@ -238,7 +238,7 @@ class Selection {
 
     const removeMouseDownListener = addEventListener('pointerdown', (e) => {
       if (!this._onlyTouch && e.pointerType === "mouse") {
-        console.log("mousedown");
+        // console.log("mousedown");
 
         this._removeInitialEventListener()
         this._handleInitialEvent(e)
@@ -250,7 +250,7 @@ class Selection {
     })
 
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
-      console.log("touchstart")
+      // console.log("touchstart")
       this._onlyTouch = true;
       this._handleTouchStart(e);
     });
