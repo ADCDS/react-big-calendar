@@ -17,21 +17,15 @@ class BackgroundCells extends React.Component {
       selecting: false,
     }
     this.containerRef = createRef()
+    this._selectorInitialized = false
   }
 
   componentDidMount() {
     this.props.selectable && this._selectable()
   }
 
-  componentWillUnmount() {
-    this._teardownSelectable()
-  }
-
   componentDidUpdate(prevProps) {
     if (!prevProps.selectable && this.props.selectable) this._selectable()
-
-    if (prevProps.selectable && !this.props.selectable)
-      this._teardownSelectable()
   }
 
   render() {
@@ -79,10 +73,15 @@ class BackgroundCells extends React.Component {
   }
 
   _selectable() {
+    if (this._selectorInitialized) return
+
+    if (!this.context) return
+
+    this._selectorInitialized = true
     let node = this.containerRef.current
     // console.log("BackgroundCells _selectable", node);
 
-    let selector = this._selector = this.context.draggable.selector;
+    let selector = this.context.draggable.selector
 
     let selectorClicksHandler = (point, actionType) => {
       if (!isEvent(node, point) && !isShowMore(node, point)) {
@@ -108,8 +107,7 @@ class BackgroundCells extends React.Component {
       const { event } = this.context.draggable.dragAndDropAction
 
       // console.log("BackgroundCells selecting", {event})
-      if(event)
-        return;
+      if (event) return
 
       let { range, rtl } = this.props
 
@@ -145,26 +143,29 @@ class BackgroundCells extends React.Component {
       selectorClicksHandler(point, 'doubleClick')
     )
 
-    selector.on('clearBackgroundCells', () => {
-      const { startIdx, endIdx } = this.state
-      this.setState({ selecting: false })
+    selector.on(
+      'clearBackgroundCells',
+      () => {
+        const { startIdx, endIdx } = this.state
+        this.setState({ selecting: false })
 
-      return this.getSlotsInRange(startIdx, endIdx);
-    }, {executeAll: true})
+        return this.getSlotsInRange(startIdx, endIdx)
+      },
+      { executeAll: true }
+    )
 
     selector.on('endMove', () => {
       // console.log("BackgroundCells endMove", node);
-      if(!this.state.selecting)
-        return;
+      if (!this.state.selecting) return
 
       // Clear other background cells:
-      const dates = selector.emit('clearBackgroundCells').flat();
+      const dates = selector.emit('clearBackgroundCells').flat()
 
       this._selectSlot({
         ...this.state,
         action: 'select',
-        slots: dates
-      });
+        slots: dates,
+      })
 
       this._initial = {}
       this.setState({ selecting: false })
@@ -172,23 +173,18 @@ class BackgroundCells extends React.Component {
     })
   }
 
-  _teardownSelectable() {
-    if (!this._selector) return
-    this._selector.teardown()
-    this._selector = null
-  }
-
   _selectSlot({ slots, action, bounds, box }) {
     if (slots.length > 0)
       this.props.onSelectSlot &&
-        this.props.onSelectSlot({
-          action,
-          bounds,
-          box,
-          resourceId: this.props.resourceId,
-        },
-        slots
-      )
+        this.props.onSelectSlot(
+          {
+            action,
+            bounds,
+            box,
+            resourceId: this.props.resourceId,
+          },
+          slots
+        )
   }
 }
 
