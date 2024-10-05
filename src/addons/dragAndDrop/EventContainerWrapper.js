@@ -208,7 +208,7 @@ class EventContainerWrapper extends React.Component {
 
       let evtProp;
       for (const event of events[1]) {
-        if (event.props.event.id === Number(eventIdFromNode)) {
+        if (event.props.event.id.toString() === eventIdFromNode) {
           evtProp = event.props.event
           this.context.draggable.onStart()
 

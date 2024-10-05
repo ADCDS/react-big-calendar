@@ -1,5 +1,5 @@
 {
-  "name": "react-big-calendar",
+  "name": "@adriel/react-big-calendar",
   "version": "1.14.1",
   "description": "Calendar! with events",
   "author": {
@@ -12,7 +12,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "registry": "https://git.adriel.eu/api/packages/adriel/npm/"
   },
   "license": "MIT",
   "main": "lib/index.js",
@@ -38,7 +38,7 @@
     "build-storybook": "build-storybook",
     "lint": "NODE_ENV=development eslint src test",
     "prepare": "is-ci || husky install",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "npm run-script build",
     "prettier": "prettier '**/*js' '!lib/**' --write ",
     "storybook": "start-storybook -p 9002",
     "test": "yarn lint && NODE_ENV=test jest",

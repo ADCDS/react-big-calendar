@@ -372,7 +372,7 @@ class DayColumn extends React.Component {
         this.state.end !== state.end ||
         this.state.selecting !== state.selecting
       ) {
-        this.setState(state)
+        this.setState({...state, action: "select"})
       }
 
       if (this.state.selecting) {
