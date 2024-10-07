@@ -53,6 +53,7 @@ export default function withDragAndDrop(Calendar) {
           onBeginAction: this.handleBeginAction,
           onDropFromOutside: this.props.onDropFromOutside,
           dragFromOutsideItem: this.props.dragFromOutsideItem,
+          setEventOrigin: this.setEventOrigin,
           draggableAccessor: this.props.draggableAccessor,
           resizableAccessor: this.props.resizableAccessor,
           dragAndDropAction: this.state,
@@ -72,6 +73,10 @@ export default function withDragAndDrop(Calendar) {
 
     handleInteractionStart = () => {
       if (this.state.interacting === false) this.setState({ interacting: true })
+    }
+
+    setEventOrigin = (origin) => {
+      this.setState(prev => ({...prev, eventOrigin: origin}))
     }
 
     handleInteractionEnd = (interactionInfo) => {

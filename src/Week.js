@@ -34,6 +34,7 @@ class Week extends React.Component {
         max={max}
         scrollToTime={scrollToTime}
         enableAutoScroll={enableAutoScroll}
+        parentType={"week"}
       />
     )
   }

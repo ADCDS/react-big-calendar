@@ -4,7 +4,7 @@ import { DnDContext } from './DnDContext'
 import { scrollParent, scrollTop } from 'dom-helpers'
 import qsa from 'dom-helpers/cjs/querySelectorAll'
 
-import Selection, { getBoundsForNode, getEventNodeFromPoint } from '../../Selection'
+import Selection, { getBoundsForNode, getEventNodeFromPoint, isOverContainer } from '../../Selection'
 import TimeGridEvent from '../../TimeGridEvent'
 import { dragAccessors, eventTimes, pointInColumn } from './common'
 
@@ -236,6 +236,8 @@ class EventContainerWrapper extends React.Component {
       }
 
       if(evtProp) {
+        this.context.draggable.setEventOrigin(this);
+
         // eventOffsetTop is distance from the top of the event to the initial
         // mouseDown position. We need this later to compute the new top of the
         // event during move operations, since the final location is really a
@@ -305,13 +307,31 @@ class EventContainerWrapper extends React.Component {
       this.context.draggable.onEnd(null)
     })
 
-    selector.on('endMove', () => {
-      if(this.state.event) {
-        // If the moved event did not belong to this container, return null,
-        // that way we allow the sibling days in week view's endMove to trigger
+    selector.on('endMove', (point) => {
+      let draggableAreaNode;
 
-        this.context.draggable.onEnd(this.state.event)
-        this.reset()
+      if(this.props.parentType === "week") {
+        draggableAreaNode = node.parentElement.parentElement.parentElement
+      } else {
+        draggableAreaNode = node.parentElement;
+      }
+      // console.log(node, this.props);
+
+      const { clientX, clientY } = point;
+
+      const origin = this.context.draggable.dragAndDropAction.eventOrigin;
+
+      if (origin && origin instanceof EventContainerWrapper && !isOverContainer(draggableAreaNode, clientX, clientY)) {
+        this.reset();
+        this.context.draggable.onEnd(null)
+      } else {
+        if (this.state.event) {
+          // If the moved event did not belong to this container, return null,
+          // that way we allow the sibling days in week view's endMove to trigger
+
+          this.context.draggable.onEnd(this.state.event)
+          this.reset()
+        }
       }
     })
   }

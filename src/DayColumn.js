@@ -161,6 +161,7 @@ class DayColumn extends React.Component {
           getters={getters}
           components={components}
           slotMetrics={slotMetrics}
+          parentType={this.props.parentType}
         >
           <div className={clsx('rbc-events-container', rtl && 'rtl')}>
             {this.renderEvents({
@@ -237,6 +238,7 @@ class DayColumn extends React.Component {
           key={'evt_' + idx}
           getters={getters}
           rtl={rtl}
+          parentType={this.props.parentType}
           components={components}
           continuesPrior={continuesPrior}
           continuesAfter={continuesAfter}
@@ -372,7 +374,7 @@ class DayColumn extends React.Component {
         this.state.end !== state.end ||
         this.state.selecting !== state.selecting
       ) {
-        this.setState({...state, action: "select"})
+        this.setState({...state, bounds, action: "select"})
       }
 
       if (this.state.selecting) {

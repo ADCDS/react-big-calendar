@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import EventRow from '../../EventRow'
-import Selection, { getBoundsForNode, getEventNodeFromPoint } from '../../Selection'
+import Selection, { getBoundsForNode, getEventNodeFromPoint, isOverContainer } from '../../Selection'
 import { eventSegments } from '../../utils/eventLevels'
 import { getSlotAtX, pointInBox } from '../../utils/selection'
 import { dragAccessors, eventTimes, pointInColumn } from './common'
@@ -152,7 +152,7 @@ class WeekWrapper extends React.Component {
 
       if (this.context.draggable.dragAndDropAction.event) {
         // Already selecting an event
-        return false
+        return
       }
 
       if (!isInBox) {
@@ -162,6 +162,8 @@ class WeekWrapper extends React.Component {
 
       const eventNode = getEventNodeFromPoint(node, point)
       if (!eventNode) return false
+
+      this.context.draggable.setEventOrigin(this);
 
       // Get the event ID from the eventNode
       let eventIdFromNode = eventNode.dataset.eventId
@@ -241,8 +243,18 @@ class WeekWrapper extends React.Component {
       this.handleDragOverFromOutside(point, bounds)
     })
 
-    selector.on('endMove', () => {
-      this.handleInteractionEnd()
+    selector.on('endMove', (point) => {
+      const { clientX, clientY } = point;
+      const draggableArea = node.parentElement;
+
+      const origin = this.context.draggable.dragAndDropAction.eventOrigin;
+
+      if (origin && origin instanceof WeekWrapper && !isOverContainer(draggableArea, clientX, clientY)) {
+        this.reset();
+        this.context.draggable.onEnd(null)
+      } else {
+        this.handleInteractionEnd()
+      }
     })
 
     selector.on('click', () => {

@@ -56,7 +56,7 @@ class MonthView extends React.Component {
           })
         }
       }),
-      false
+      false,
     )
   }
 
@@ -89,8 +89,10 @@ class MonthView extends React.Component {
         <div className="rbc-row rbc-month-header" role="row">
           {this.renderHeaders(weeks[0])}
         </div>
-        {weeks.map(this.renderWeek)}
+        <span className={"rbc-month-view"}>
+          {weeks.map(this.renderWeek)}
         {this.props.popup && this.renderOverlay()}
+          </span>
       </div>
     )
   }
@@ -118,7 +120,7 @@ class MonthView extends React.Component {
       week[0],
       week[week.length - 1],
       accessors,
-      localizer
+      localizer,
     )
 
     const sorted = sortWeekEvents(weeksEvents, accessors, localizer)
@@ -169,7 +171,7 @@ class MonthView extends React.Component {
         className={clsx(
           className,
           isOffRange && 'rbc-off-range',
-          isCurrent && 'rbc-current'
+          isCurrent && 'rbc-current',
         )}
         role="cell"
       >

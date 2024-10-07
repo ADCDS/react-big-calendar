@@ -175,6 +175,7 @@ export default class TimeGrid extends Component {
             events={daysEvents}
             backgroundEvents={daysBackgroundEvents}
             dayLayoutAlgorithm={dayLayoutAlgorithm}
+            parentType={this.props.parentType}
           />
         )
       })
@@ -295,12 +296,14 @@ export default class TimeGrid extends Component {
             className="rbc-time-gutter"
             getters={getters}
           />
-          {this.renderEvents(
-            range,
-            rangeEvents,
-            rangeBackgroundEvents,
-            getNow()
-          )}
+          <div className={"rbc-time-content"}>
+            {this.renderEvents(
+              range,
+              rangeEvents,
+              rangeBackgroundEvents,
+              getNow()
+            )}
+          </div>
         </div>
       </div>
     )

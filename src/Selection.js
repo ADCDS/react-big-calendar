@@ -6,7 +6,7 @@ function addEventListener(type, handler, target = document) {
   return listen(target, type, handler, { passive: false })
 }
 
-function isOverContainer(container, x, y) {
+export function isOverContainer(container, x, y) {
   return !container || contains(container, document.elementFromPoint(x, y))
 }
 
@@ -304,11 +304,11 @@ class Selection {
   _handleEndMove(e) {
     this._isHolding = false;
 
-    if(!this.selecting && this._initialEventData) {
+    if (!this.selecting && this._initialEventData) {
       this.emit('click', this._initialEventData)
     } else {
       this.selecting = false;
-      this.emit('endMove')
+      this.emit('endMove', getEventCoordinates(e))
     }
 
     this._removeEndListener && this._removeEndListener();
