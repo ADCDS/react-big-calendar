@@ -778,6 +778,7 @@ class InnerCalendar extends React.Component {
     components: PropTypes.shape({
       event: PropTypes.elementType,
       eventWrapper: PropTypes.elementType,
+      agendaEventWrapper: PropTypes.elementType,
       eventContainerWrapper: PropTypes.elementType,
       dateCellWrapper: PropTypes.elementType,
       dayColumnWrapper: PropTypes.elementType,
@@ -950,6 +951,7 @@ class InnerCalendar extends React.Component {
         eventWrapper: NoopWrapper,
         backgroundEventWrapper: NoopWrapper,
         eventContainerWrapper: NoopWrapper,
+        agendaEventWrapper: NoopWrapper,
         dateCellWrapper: NoopWrapper,
         weekWrapper: NoopWrapper,
         timeSlotWrapper: NoopWrapper,

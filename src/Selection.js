@@ -308,7 +308,16 @@ class Selection {
       this.emit('click', this._initialEventData)
     } else {
       this.selecting = false;
-      this.emit('endMove', getEventCoordinates(e))
+
+      let eventCoordinates;
+
+      if(e.pointerType === "mouse") {
+        eventCoordinates = getEventCoordinates(e);
+      } else {
+        eventCoordinates = this._lastEventCoordinates;
+      }
+
+      this.emit('endMove', eventCoordinates)
     }
 
     this._removeEndListener && this._removeEndListener();
@@ -451,7 +460,9 @@ class Selection {
     }
 
     let { x, y } = this._initialEventData
-    const { pageX, pageY } = getEventCoordinates(e)
+    this._lastEventCoordinates = getEventCoordinates(e);
+    const { pageX, pageY } = this._lastEventCoordinates;
+
     let w = Math.abs(x - pageX)
     let h = Math.abs(y - pageY)
 

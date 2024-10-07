@@ -8,10 +8,11 @@ export const dragAccessors = {
 
 function nest(...Components) {
   const factories = Components.filter(Boolean).map(createFactory)
-  const Nest = ({ children, ...props }) =>
-    factories.reduceRight((child, factory) => factory(props, child), children)
+  return ({ children, ...props }) => {
+    let reactElement = factories.reduceRight((child, factory) => factory(props, child), children)
 
-  return Nest
+    return reactElement
+  }
 }
 
 export function mergeComponents(components = {}, addons) {

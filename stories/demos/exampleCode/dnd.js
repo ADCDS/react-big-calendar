@@ -7,8 +7,18 @@ import DemoLink from '../../DemoLink.component'
 import withDragAndDrop from '../../../src/addons/dragAndDrop'
 // Storybook cannot alias this, so you would use 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
 import '../../../src/addons/dragAndDrop/styles.scss'
+import EventWrapper from '../../../src/addons/dragAndDrop/EventWrapper'
+
 
 const DragAndDropCalendar = withDragAndDrop(Calendar)
+
+const EventWrapperComponent = (props) => {
+  return (
+    <EventWrapper {...props}>
+      {props.children}
+    </EventWrapper>
+  );
+};
 
 function buildMessage(slotInfo) {
   return `[onSelectSlot] a date selection was made, passing 'slotInfo'
@@ -88,6 +98,9 @@ export default function DragAndDrop({ localizer }) {
           selectable={true}
           onSelectSlot={onSelectSlot}
           onSelectEvent={onSelectSlot}
+          components={{
+            eventWrapper: (props) => <EventWrapperComponent {...props}/>
+          }}
           popup
           resizable
         />

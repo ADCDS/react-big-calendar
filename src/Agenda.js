@@ -33,7 +33,7 @@ function Agenda({
   })
 
   const renderDay = (day, events, dayKey) => {
-    const { event: Event, date: AgendaDate } = components
+    const { event: Event, date: AgendaDate, agendaEventWrapper: AgendaEventWrapper } = components
 
     events = events.filter((e) =>
       inRange(
@@ -67,9 +67,7 @@ function Agenda({
               dateLabel
             )}
           </td>
-        ) : (
-          false
-        )
+        ) : false
 
       return (
         <tr
@@ -78,16 +76,18 @@ function Agenda({
           style={userProps.style}
         >
           {first}
-          <td className="rbc-agenda-time-cell">{timeRangeLabel(day, event)}</td>
-          <td
-            className="rbc-agenda-event-cell"
-            onClick={(e) => onSelectEvent && onSelectEvent(event, e)}
-            onDoubleClick={(e) =>
-              onDoubleClickEvent && onDoubleClickEvent(event, e)
-            }
-          >
-            {Event ? <Event event={event} title={title} /> : title}
-          </td>
+          <AgendaEventWrapper event={event} type="date" >
+            <td className="rbc-agenda-time-cell">{timeRangeLabel(day, event)}</td>
+            <td
+              className="rbc-agenda-event-cell"
+              onClick={(e) => onSelectEvent && onSelectEvent(event, e)}
+              onDoubleClick={(e) =>
+                onDoubleClickEvent && onDoubleClickEvent(event, e)
+              }
+            >
+              {Event ? <Event event={event} title={title} /> : title}
+            </td>
+          </AgendaEventWrapper>
         </tr>
       )
     }, [])

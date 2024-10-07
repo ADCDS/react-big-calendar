@@ -42,12 +42,13 @@ export default function withDragAndDrop(Calendar) {
 
       this.state = { interacting: false }
       this.calendarRef = createRef()
+      this._selector = new Selection(() => this.calendarRef.current);
     }
 
     getDnDContextValue() {
       return {
         draggable: {
-          selector: new Selection(() => this.calendarRef.current),
+          selector: this._selector,
           onStart: this.handleInteractionStart,
           onEnd: this.handleInteractionEnd,
           onBeginAction: this.handleBeginAction,
@@ -110,7 +111,6 @@ export default function withDragAndDrop(Calendar) {
       props.selectable = selectable ? 'ignoreEvents' : false
 
       this.components = mergeComponents(components, {
-        eventWrapper: EventWrapper,
         eventContainerWrapper: EventContainerWrapper,
         weekWrapper: WeekWrapper,
       })
