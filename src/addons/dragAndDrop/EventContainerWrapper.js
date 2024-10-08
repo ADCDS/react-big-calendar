@@ -3,7 +3,6 @@ import React from 'react'
 import { DnDContext } from './DnDContext'
 import { scrollParent, scrollTop } from 'dom-helpers'
 import qsa from 'dom-helpers/cjs/querySelectorAll'
-
 import Selection, { getBoundsForNode, getEventNodeFromPoint, isOverContainer } from '../../Selection'
 import TimeGridEvent from '../../TimeGridEvent'
 import { dragAccessors, eventTimes, pointInColumn } from './common'
@@ -24,6 +23,7 @@ class EventContainerWrapper extends React.Component {
     super(...args)
     this.state = {}
     this.ref = React.createRef()
+    this._removeListeners = []  // Store cleanup functions
   }
 
   componentDidMount() {
@@ -31,7 +31,7 @@ class EventContainerWrapper extends React.Component {
   }
 
   componentWillUnmount() {
-    this._teardownSelectable()
+    this._teardownSelectable()  // Clean up listeners
   }
 
   reset() {
@@ -57,16 +57,17 @@ class EventContainerWrapper extends React.Component {
   }
 
   handleMove = (point, bounds) => {
-    let pointInColumn1 = pointInColumn(bounds, point)
+    let pointInCol = pointInColumn(bounds, point)
+    if (!pointInCol) return this.reset()
 
-    if (!pointInColumn1) return this.reset()
     const { event } = this.context.draggable.dragAndDropAction
     const { accessors, slotMetrics } = this.props
 
+    const { eventOffsetTop } = event;
     const newSlot = slotMetrics.closestSlotFromPoint(
-      { y: point.y - this.eventOffsetTop, x: point.x },
+      { y: point.y - eventOffsetTop, x: point.x },
       bounds
-    );
+    )
 
     const { duration } = eventTimes(event, accessors, this.props.localizer)
     let newEnd = this.props.localizer.add(newSlot, duration, 'milliseconds')
@@ -87,16 +88,12 @@ class EventContainerWrapper extends React.Component {
         newTime,
         slotMetrics.closestSlotFromDate(end, -1)
       )
-      // Get the new range based on the new start
-      // but don't overwrite the end date as it could be outside this day boundary.
       newRange = slotMetrics.getRange(newStart, end)
       newRange = {
         ...newRange,
         endDate: end,
       }
     } else if (direction === 'DOWN') {
-      // Get the new range based on the new end
-      // but don't overwrite the start date as it could be outside this day boundary.
       const newEnd = localizer.max(
         newTime,
         slotMetrics.closestSlotFromDate(start)
@@ -155,9 +152,7 @@ class EventContainerWrapper extends React.Component {
           scrollTop(
             parent,
             Math.min(
-              draggedEl.offsetTop -
-                parent.offsetHeight +
-                draggedEl.offsetHeight,
+              draggedEl.offsetTop - parent.offsetHeight + draggedEl.offsetHeight,
               parent.scrollHeight
             )
           )
@@ -170,178 +165,166 @@ class EventContainerWrapper extends React.Component {
     let wrapper = this.ref.current
     let node = wrapper.children[0]
 
-    // console.log('______SELECTABLE', node)
     let isBeingDragged = false
     let isInDayColumn = false
 
-    let selector = (this._selector = new Selection(
-      () => wrapper.closest('.rbc-time-view'),
-      {},
-      this.context
-    ))
+    const selector = this.context.draggable.selector;
 
     let parent = scrollParent(wrapper)
 
-    selector.on('beforeSelect', (point, e) => {
-      isInDayColumn = pointInColumn(getBoundsForNode(node), point)
+    // Storing cleanup functions returned by `selector.on`
+    this._removeListeners.push(
+      selector.on('beforeSelect', (point, e) => {
+        isInDayColumn = pointInColumn(getBoundsForNode(node), point)
+        const eventNode = getEventNodeFromPoint(node, point)
 
-      const eventNode = getEventNodeFromPoint(node, point)
-      // console.log({eventNode});
+        if (!eventNode) return false
+        const eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
-      if (!eventNode) return false
+        if (this.context.draggable.dragAndDropAction.event) {
+          return { event: this.context.draggable.dragAndDropAction.event }
+        }
 
-      this.eventOffsetTop = point.y - getBoundsForNode(eventNode).top
+        const { dragAndDropAction } = this.context.draggable
 
-      if (this.context.draggable.dragAndDropAction.event) {
-        // Already selecting an event
-        return {event: this.context.draggable.dragAndDropAction.event}
-      }
+        if (dragAndDropAction.action === 'resize') {
+          return isInDayColumn
+        }
 
-      const { dragAndDropAction } = this.context.draggable
+        const events = this.props.children.props.children
+        let eventIdFromNode = eventNode.dataset.eventId
 
-      if (dragAndDropAction.action === 'resize') {
-        return isInDayColumn
-      }
+        let evtProp
+        for (const event of events[1]) {
+          if (event.props.event.id.toString() === eventIdFromNode) {
+            evtProp = event.props.event
+            evtProp.eventOffsetTop = eventOffsetTop;
 
-      const events = this.props.children.props.children
-      let eventIdFromNode = eventNode.dataset.eventId
+            this.context.draggable.onStart()
 
-      let evtProp;
-      for (const event of events[1]) {
-        if (event.props.event.id.toString() === eventIdFromNode) {
-          evtProp = event.props.event
-          this.context.draggable.onStart()
+            const isResizeHandle = e.target
+              .getAttribute('class')
+              ?.includes('rbc-addons-dnd-resize')
+            if (!isResizeHandle) {
+              isBeingDragged = true
+              this.context.draggable.onBeginAction(evtProp, 'move')
+            } else {
+              isBeingDragged = true
 
-          const isResizeHandle = e.target
-            .getAttribute('class')
-            ?.includes('rbc-addons-dnd-resize')
-          if (!isResizeHandle) {
-            isBeingDragged = true
-            this.context.draggable.onBeginAction(evtProp, 'move')
-          } else {
-            isBeingDragged = true
+              let anchorDirection = e.target.dataset.anchorDirection
+              if (!anchorDirection) {
+                anchorDirection = e.target.parentNode.dataset.anchorDirection
+              }
 
-            let anchorDirection = e.target.dataset.anchorDirection
-            if (!anchorDirection) {
-              anchorDirection = e.target.parentNode.dataset.anchorDirection
+              this.context.draggable.onBeginAction(
+                evtProp,
+                'resize',
+                anchorDirection.toUpperCase()
+              )
             }
-
-            this.context.draggable.onBeginAction(
-              evtProp,
-              'resize',
-              anchorDirection.toUpperCase()
-            )
+            break
           }
-
-          break;
         }
-      }
 
-      if(evtProp) {
-        this.context.draggable.setEventOrigin(this);
+        if (evtProp) {
+          this.context.draggable.setEventOrigin(this)
+        }
+      })
+    )
 
-        // eventOffsetTop is distance from the top of the event to the initial
-        // mouseDown position. We need this later to compute the new top of the
-        // event during move operations, since the final location is really a
-        // delta from this point. note: if we want to DRY this with WeekWrapper,
-        // probably better just to capture the mouseDown point here and do the
-        // placement computation in handleMove()...
+    this._removeListeners.push(
+      selector.on('probeEventDrag', (point) => {
+        isInDayColumn = pointInColumn(getBoundsForNode(node), point)
+        return getEventNodeFromPoint(node, point)
+      })
+    )
 
-        // return {event: evtProp}
-      }
+    this._removeListeners.push(
+      selector.on('selecting', (box) => {
+        const bounds = getBoundsForNode(node)
+        const { dragAndDropAction } = this.context.draggable
 
-      // If no event was found, return null, that way we trigger the beforeSelect
-      // In the sibling days in week view
-    })
+        if (dragAndDropAction.action === 'move') {
+          this.updateParentScroll(parent, node)
+          this.handleMove(box, bounds)
+        }
+        if (dragAndDropAction.action === 'resize') {
+          if (!isInDayColumn) return
 
-    selector.on('probeEventDrag', (point) => {
-      isInDayColumn = pointInColumn(getBoundsForNode(node), point)
-      return getEventNodeFromPoint(node, point);
-    });
+          this.updateParentScroll(parent, node)
+          this.handleResize(box, bounds)
+        }
+      })
+    )
 
-    selector.on('selecting', (box) => {
-      const bounds = getBoundsForNode(node)
-      const { dragAndDropAction } = this.context.draggable;
+    this._removeListeners.push(
+      selector.on('dropFromOutside', (point) => {
+        if (!this.context.draggable.onDropFromOutside) return
+        const bounds = getBoundsForNode(node)
+        if (!pointInColumn(bounds, point)) return
+        this.handleDropFromOutside(point, bounds)
+      })
+    )
 
-      // console.log("EventContainerWrapper selecting", node);
+    this._removeListeners.push(
+      selector.on('dragOverFromOutside', (point) => {
+        const item = this.context.draggable.dragFromOutsideItem
+          ? this.context.draggable.dragFromOutsideItem()
+          : null
+        if (!item) return
+        const bounds = getBoundsForNode(node)
+        if (!pointInColumn(bounds, point)) return this.reset()
+        this.handleDragOverFromOutside(point, bounds)
+      })
+    )
 
-      if (dragAndDropAction.action === 'move') {
-        this.updateParentScroll(parent, node)
-        this.handleMove(box, bounds)
-
-        return true // Avoid calling WeekWrapper's selecting callback
-      }
-      if (dragAndDropAction.action === 'resize') {
-        if(!isInDayColumn)
-          return;
-
-        this.updateParentScroll(parent, node)
-        this.handleResize(box, bounds)
-
-        return true // Avoid calling WeekWrapper's selecting callback
-      }
-    })
-
-    selector.on('dropFromOutside', (point) => {
-      if (!this.context.draggable.onDropFromOutside) return
-      const bounds = getBoundsForNode(node)
-      if (!pointInColumn(bounds, point)) return
-      this.handleDropFromOutside(point, bounds)
-    })
-
-    selector.on('dragOverFromOutside', (point) => {
-      const item = this.context.draggable.dragFromOutsideItem
-        ? this.context.draggable.dragFromOutsideItem()
-        : null
-      if (!item) return
-      const bounds = getBoundsForNode(node)
-      if (!pointInColumn(bounds, point)) return this.reset()
-      this.handleDragOverFromOutside(point, bounds)
-    });
-
-    selector.on('click', () => {
-      if (isBeingDragged) this.reset()
-      this.context.draggable.onEnd(null)
-    })
-
-    selector.on('reset', () => {
-      this.reset()
-      this.context.draggable.onEnd(null)
-    })
-
-    selector.on('endMove', (point) => {
-      let draggableAreaNode;
-
-      if(this.props.parentType === "week") {
-        draggableAreaNode = node.parentElement.parentElement.parentElement
-      } else {
-        draggableAreaNode = node.parentElement;
-      }
-      // console.log(node, this.props);
-
-      const { clientX, clientY } = point;
-
-      const origin = this.context.draggable.dragAndDropAction.eventOrigin;
-
-      if (origin && origin instanceof EventContainerWrapper && !isOverContainer(draggableAreaNode, clientX, clientY)) {
-        this.reset();
+    this._removeListeners.push(
+      selector.on('click', () => {
+        if (isBeingDragged) this.reset()
         this.context.draggable.onEnd(null)
-      } else {
-        if (this.state.event) {
-          // If the moved event did not belong to this container, return null,
-          // that way we allow the sibling days in week view's endMove to trigger
+      })
+    )
 
-          this.context.draggable.onEnd(this.state.event)
-          this.reset()
+    this._removeListeners.push(
+      selector.on('reset', () => {
+        this.reset()
+        this.context.draggable.onEnd(null)
+      })
+    )
+
+    this._removeListeners.push(
+      selector.on('endMove', (point) => {
+        let draggableAreaNode
+        if (this.props.parentType === 'week') {
+          draggableAreaNode = node.parentElement.parentElement.parentElement
+        } else {
+          draggableAreaNode = node.parentElement
         }
-      }
-    })
+
+        const { clientX, clientY } = point
+        const origin = this.context.draggable.dragAndDropAction.eventOrigin
+
+        if (
+          origin &&
+          origin instanceof EventContainerWrapper &&
+          !isOverContainer(draggableAreaNode, clientX, clientY)
+        ) {
+          this.reset()
+          this.context.draggable.onEnd(null)
+        } else {
+          if (this.state.event) {
+            this.context.draggable.onEnd(this.state.event)
+            this.reset()
+          }
+        }
+      })
+    )
   }
 
   _teardownSelectable = () => {
-    if (!this._selector) return
-    this._selector.teardown()
-    this._selector = null
+    // Invoke each stored cleanup function to remove the event listeners
+    this._removeListeners.forEach(({ remove }) => remove())
+    this._removeListeners = []  // Clear the array
   }
 
   renderContent() {
@@ -368,8 +351,6 @@ class EventContainerWrapper extends React.Component {
       else label = localizer.format({ start, end }, format)
     }
 
-    // console.log({ event })
-
     return React.cloneElement(children, {
       children: (
         <React.Fragment>
@@ -394,7 +375,6 @@ class EventContainerWrapper extends React.Component {
   }
 
   render() {
-    // console.log('render')
     return <div ref={this.ref}>{this.renderContent()}</div>
   }
 }

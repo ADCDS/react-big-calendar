@@ -94,17 +94,20 @@ class Selection {
   }
 
   on(type, handler, options = {}) {
-    let handlers = this._listeners[type] || (this._listeners[type] = [])
+    const self = this;
+    const handlers = this._listeners[type] || (this._listeners[type] = [])
 
-    handlers.push({
+    const listener = {
       _fn: handler,
-      options
-    })
+      options,
+      active: true  // Add an `active` flag to the handler
+    }
+
+    handlers.push(listener)
 
     return {
       remove() {
-        let idx = handlers.indexOf(handler)
-        if (idx !== -1) handlers.splice(idx, 1)
+        self._listeners[type] = self._listeners[type].filter(l => l !== listener);
       },
     }
   }
@@ -113,14 +116,13 @@ class Selection {
     let result
     let handlers = this._listeners[type] || []
 
-    handlers.forEach(({_fn, options}) => {
+    handlers.forEach(({ _fn, options }) => {
       if (result === undefined || options.executeAll) {
-        if(options.executeAll) {
-          if(!result) {
-            result = [];
+        if (options.executeAll) {
+          if (!result) {
+            result = []
           }
-
-          result.push(_fn(...args));
+          result.push(_fn(...args))
         } else {
           result = _fn(...args)
         }

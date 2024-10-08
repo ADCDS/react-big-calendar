@@ -5,13 +5,11 @@ import clsx from 'clsx'
 import Selection, { getBoundsForNode, isEvent } from './Selection'
 import * as TimeSlotUtils from './utils/TimeSlots'
 import { isSelected, pointInBox } from './utils/selection'
-
 import { notify } from './utils/helpers'
 import * as DayEventLayout from './utils/DayEventLayout'
 import TimeSlotGroup from './TimeSlotGroup'
 import TimeGridEvent from './TimeGridEvent'
 import { DayLayoutAlgorithmPropType } from './utils/propTypes'
-
 import DayColumnWrapper from './DayColumnWrapper'
 import { DnDContext } from './addons/dragAndDrop/DnDContext'
 
@@ -25,8 +23,9 @@ class DayColumn extends React.Component {
     super(...args)
 
     this.slotMetrics = TimeSlotUtils.getSlotMetrics(this.props)
-    this._selectedSlots = [];
+    this._selectedSlots = []
     this.containerRef = createRef()
+    this._removeListeners = []  // Store cleanup functions
   }
 
   componentDidMount() {
@@ -38,14 +37,13 @@ class DayColumn extends React.Component {
   }
 
   componentWillUnmount() {
-    this._teardownSelectable()
+    this._teardownSelectable()  // Clean up listeners
     this.clearTimeIndicatorInterval()
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (this.props.selectable && !prevProps.selectable) this._selectable()
-    if (!this.props.selectable && prevProps.selectable)
-      this._teardownSelectable()
+    if (!this.props.selectable && prevProps.selectable) this._teardownSelectable()
 
     const { getNow, isNow, localizer, date, min, max } = this.props
     const getNowChanged = localizer.neq(prevProps.getNow(), getNow(), 'minutes')
@@ -70,10 +68,6 @@ class DayColumn extends React.Component {
     }
   }
 
-  /**
-   * @param tail {Boolean} - whether `positionTimeIndicator` call should be
-   *   deferred or called upon setting interval (`true` - if deferred);
-   */
   setTimeIndicatorPositionUpdateInterval(tail = false) {
     if (!this.intervalTriggered && !tail) {
       this.positionTimeIndicator()
@@ -121,11 +115,8 @@ class DayColumn extends React.Component {
 
     let { slotMetrics } = this
     let { selecting, top, height, startDate, endDate } = this.state
-
     let selectDates = { start: startDate, end: endDate }
-
     const { className, style } = dayProp(max, resource)
-
     const DayColumnWrapperComponent =
       components.dayColumnWrapper || DayColumnWrapper
 
@@ -139,7 +130,7 @@ class DayColumn extends React.Component {
           'rbc-day-slot',
           'rbc-time-column',
           isNow && 'rbc-now',
-          isNow && 'rbc-today', // WHY
+          isNow && 'rbc-today',
           selecting && 'rbc-slot-selecting'
         )}
         slotMetrics={slotMetrics}
@@ -269,10 +260,9 @@ class DayColumn extends React.Component {
 
   _selectable = () => {
     let node = this.containerRef.current
-    const { longPressThreshold, localizer } = this.props
-    let selector = (this._selector = new Selection(() => node, {
-      longPressThreshold: longPressThreshold,
-    }))
+
+    const { localizer } = this.props
+    const selector = this.context.draggable.selector
 
     let selectionState = (point) => {
       let currentSlot = this.slotMetrics.closestSlotFromPoint(
@@ -319,81 +309,90 @@ class DayColumn extends React.Component {
           startDate,
           endDate,
           action: actionType,
-          box
+          box,
         })
       }
       this.setState({ selecting: false })
     }
 
-    selector.on('beforeSelect', (box) => {
-      // console.log("DayColumn beforeSelect");
-      if (this.props.selectable !== 'ignoreEvents') return {timeCell: true}
-
-      if(!isEvent(this.containerRef.current, box)) {
-        return {timeCell: true}
-      } else {
-       return true // Avoid calling WeekWrappers beforeSelect
-      }
-    })
-
-    selector.on('click', (box) => selectorClicksHandler(box, 'click'))
-
-    selector.on('doubleClick', (box) =>
-      selectorClicksHandler(box, 'doubleClick')
+    // Storing cleanup functions returned by `selector.on`
+    this._removeListeners.push(
+      selector.on('beforeSelect', (box) => {
+        if (!isEvent(this.containerRef.current, box)) {
+          // Targeted a timecell
+          console.log("Clicked a timecell");
+          return { timeCell: true }
+        } else {
+          if(this.props.selectable !== 'ignoreEvents') {
+          // Targeted an event
+          return true // Avoid calling WeekWrappers beforeSelect
+          }
+        }
+      })
     )
 
-    selector.on('selecting', (bounds) => {
-      const nodeBounds = getBoundsForNode(node)
-      if (!pointInBox(nodeBounds, bounds))
-        return;
+    this._removeListeners.push(
+      selector.on('click', (box) => selectorClicksHandler(box, 'click'))
+    )
 
-      // console.log("Daycolumn selecting", node);
+    this._removeListeners.push(
+      selector.on('doubleClick', (box) =>
+        selectorClicksHandler(box, 'doubleClick')
+      )
+    )
 
-      const { event } = this.context.draggable.dragAndDropAction
+    this._removeListeners.push(
+      selector.on('selecting', (bounds) => {
+        const nodeBounds = getBoundsForNode(node)
+        if (!pointInBox(nodeBounds, bounds)) return
 
-      // console.log("DayColumn selecting", {event})
-      if(event)
-        return;
+        const { event } = this.context.draggable.dragAndDropAction
+        if (event) return
 
-      let onSelecting = this.props.onSelecting
-      let current = this.state || {}
-      let state = selectionState(bounds)
-      let { startDate: start, endDate: end } = state
+        let onSelecting = this.props.onSelecting
+        let current = this.state || {}
+        let state = selectionState(bounds)
+        let { startDate: start, endDate: end } = state
 
-      if (onSelecting) {
+        if (onSelecting) {
+          if (
+            (localizer.eq(current.startDate, start, 'minutes') &&
+              localizer.eq(current.endDate, end, 'minutes')) ||
+            onSelecting({ start, end, resourceId: this.props.resource }) ===
+            false
+          )
+            return
+        }
+
         if (
-          (localizer.eq(current.startDate, start, 'minutes') &&
-            localizer.eq(current.endDate, end, 'minutes')) ||
-          onSelecting({ start, end, resourceId: this.props.resource }) === false
-        )
-          return
-      }
+          this.state.start !== state.start ||
+          this.state.end !== state.end ||
+          this.state.selecting !== state.selecting
+        ) {
+          this.setState({ ...state, bounds, action: 'select' })
+        }
 
-      if (
-        this.state.start !== state.start ||
-        this.state.end !== state.end ||
-        this.state.selecting !== state.selecting
-      ) {
-        this.setState({...state, bounds, action: "select"})
-      }
+        if (this.state.selecting) {
+          this._selectSlot({ ...this.state, bounds })
+        }
+      })
+    )
 
-      if (this.state.selecting) {
-        this._selectSlot({ ...this.state, bounds })
-      }
-    })
+    this._removeListeners.push(
+      selector.on('endMove', () => {
+        if (!this.state.selecting) return
 
-    selector.on('endMove', () => {
-      if(!this.state.selecting)
-        return;
+        this.notifySelectSlot(this.state)
+      })
+    )
 
-      this.notifySelectSlot(this.state)
-    })
-
-    selector.on('reset', () => {
-      if (this.state.selecting) {
-        this.setState({ selecting: false })
-      }
-    })
+    this._removeListeners.push(
+      selector.on('reset', () => {
+        if (this.state.selecting) {
+          this.setState({ selecting: false })
+        }
+      })
+    )
   }
 
   notifySelectSlot({ endDate, startDate, action, bounds, box }) {
@@ -410,13 +409,13 @@ class DayColumn extends React.Component {
   }
 
   _teardownSelectable = () => {
-    if (!this._selector) return
-    this._selector.teardown()
-    this._selector = null
+    // Invoke each stored cleanup function to remove the event listeners
+    this._removeListeners.forEach(({ remove }) => remove())
+    this._removeListeners = []  // Clear the array
   }
 
   _selectSlot = ({ startDate, endDate }) => {
-    let current = startDate;
+    let current = startDate
     this._selectedSlots = []
 
     while (this.props.localizer.lte(current, endDate)) {
