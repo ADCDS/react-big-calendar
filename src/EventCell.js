@@ -45,6 +45,8 @@ class EventCell extends React.Component {
           this.props.onSelect(event, e)
         }
       }
+    } else {
+      this.props.onSelect(event, e, {dryRun: true}) // This makes the event to get selected when user touch-drag-moves it
     }
   }
 

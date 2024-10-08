@@ -89,6 +89,8 @@ function TimeGridEvent(props) {
           onPointerDown(e)
         }
       }
+    } else {
+      onPointerDown(e, {dryRun: true}) // This makes the event to get selected when user touch-drag-moves it
     }
   }
 
