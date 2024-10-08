@@ -31,10 +31,6 @@ class WeekWrapper extends React.Component {
     this._selectable()
   }
 
-  componentWillUnmount() {
-    this._teardownSelectable()
-  }
-
   reset() {
     if (this.state.segment) this.setState({ segment: null })
   }
@@ -283,12 +279,6 @@ class WeekWrapper extends React.Component {
       resourceId,
       isAllDay,
     })
-  }
-
-  _teardownSelectable = () => {
-    if (!this._selector) return
-    this._selector.teardown()
-    this._selector = null
   }
 
   render() {

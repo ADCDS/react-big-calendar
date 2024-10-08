@@ -18,14 +18,28 @@ class BackgroundCells extends React.Component {
     }
     this.containerRef = createRef()
     this._selectorInitialized = false
+    this._isMounted = false  // Track whether the component is mounted
+    this._removeListeners = []  // Store cleanup functions
   }
 
   componentDidMount() {
+    this._isMounted = true  // Mark the component as mounted
     this.props.selectable && this._selectable()
   }
 
   componentDidUpdate(prevProps) {
     if (!prevProps.selectable && this.props.selectable) this._selectable()
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false  // Mark the component as unmounted
+    this._teardownSelectable()  // Remove all event listeners
+  }
+
+  _teardownSelectable() {
+    // Invoke each stored cleanup function to remove the event listeners
+    this._removeListeners.forEach(({remove}) => remove())
+    this._removeListeners = []  // Clear the array
   }
 
   render() {
@@ -56,8 +70,8 @@ class BackgroundCells extends React.Component {
                   selected && 'rbc-selected-cell',
                   localizer.isSameDate(date, current) && 'rbc-today',
                   currentDate &&
-                    localizer.neq(currentDate, date, 'month') &&
-                    'rbc-off-range-bg'
+                  localizer.neq(currentDate, date, 'month') &&
+                  'rbc-off-range-bg'
                 )}
               />
             </Wrapper>
@@ -79,8 +93,6 @@ class BackgroundCells extends React.Component {
 
     this._selectorInitialized = true
     let node = this.containerRef.current
-    // console.log("BackgroundCells _selectable", node);
-
     let selector = this.context.draggable.selector
 
     let selectorClicksHandler = (point, actionType) => {
@@ -100,116 +112,99 @@ class BackgroundCells extends React.Component {
       }
 
       this._initial = {}
-      this.setState({ selecting: false })
+      this._isMounted && this.setState({ selecting: false })  // Check if component is mounted before updating state
     }
 
-    selector.on('selecting', (box) => {
-      const { event } = this.context.draggable.dragAndDropAction
+    // Adding event listeners and storing their cleanup functions
+    this._removeListeners.push(
+      selector.on('selecting', (box) => {
+        const { event } = this.context.draggable.dragAndDropAction
+        if (event) return
 
-      // console.log("BackgroundCells selecting", {event})
-      if (event) return
+        let { range, rtl } = this.props
+        let startIdx = -1
+        let endIdx = -1
 
-      let { range, rtl } = this.props
+        if (!this.state.selecting) {
+          notify(this.props.onSelectStart, [box])
+          this._initial = { x: box.x, y: box.y }
+        }
 
-      let startIdx = -1
-      let endIdx = -1
+        if (selector.isSelected(node)) {
+          let nodeBox = getBoundsForNode(node)
+          ;({ startIdx, endIdx } = dateCellSelection(
+            this._initial,
+            nodeBox,
+            box,
+            range.length,
+            rtl
+          ))
+        }
 
-      if (!this.state.selecting) {
-        notify(this.props.onSelectStart, [box])
-        this._initial = { x: box.x, y: box.y }
-      }
-      if (selector.isSelected(node)) {
-        let nodeBox = getBoundsForNode(node)
-        ;({ startIdx, endIdx } = dateCellSelection(
-          this._initial,
-          nodeBox,
+        this._isMounted && this.setState({
+          selecting: true,
           box,
-          range.length,
-          rtl
-        ))
-      }
-
-      this.setState({
-        selecting: true,
-        box,
-        startIdx,
-        endIdx,
+          startIdx,
+          endIdx,
+        })
       })
-    })
-
-    selector.on('click', (point) => selectorClicksHandler(point, 'click'))
-
-    selector.on('doubleClick', (point) =>
-      selectorClicksHandler(point, 'doubleClick')
     )
 
-    selector.on(
-      'clearBackgroundCells',
-      () => {
-        const { startIdx, endIdx } = this.state
-        this.setState({ selecting: false })
-
-        return this.getSlotsInRange(startIdx, endIdx)
-      },
-      { executeAll: true }
+    this._removeListeners.push(
+      selector.on('click', (point) => selectorClicksHandler(point, 'click'))
     )
 
-    selector.on('endMove', () => {
-      // console.log("BackgroundCells endMove", node);
-      if (!this.state.selecting) return
+    this._removeListeners.push(
+      selector.on('doubleClick', (point) =>
+        selectorClicksHandler(point, 'doubleClick')
+      )
+    )
 
-      // Clear other background cells:
-      const dates = selector.emit('clearBackgroundCells').flat()
+    this._removeListeners.push(
+      selector.on(
+        'clearBackgroundCells',
+        () => {
+          const { startIdx, endIdx } = this.state
+          this._isMounted && this.setState({ selecting: false })
 
-      this._selectSlot({
-        ...this.state,
-        action: 'select',
-        slots: dates,
+          return this.getSlotsInRange(startIdx, endIdx)
+        },
+        { executeAll: true }
+      )
+    )
+
+    this._removeListeners.push(
+      selector.on('endMove', () => {
+        if (!this.state.selecting) return
+
+        const dates = selector.emit('clearBackgroundCells').flat()
+
+        this._selectSlot({
+          ...this.state,
+          action: 'select',
+          slots: dates,
+        })
+
+        this._initial = {}
+        this._isMounted && this.setState({ selecting: false })
+        notify(this.props.onSelectEnd, [this.state])
       })
-
-      this._initial = {}
-      this.setState({ selecting: false })
-      notify(this.props.onSelectEnd, [this.state])
-    })
+    )
   }
 
   _selectSlot({ slots, action, bounds, box }) {
     if (slots.length > 0)
       this.props.onSelectSlot &&
-        this.props.onSelectSlot(
-          {
-            action,
-            bounds,
-            box,
-            resourceId: this.props.resourceId,
-          },
-          slots
-        )
+      this.props.onSelectSlot(
+        {
+          action,
+          bounds,
+          box,
+          resourceId: this.props.resourceId,
+        },
+        slots
+      )
   }
-}
-
-BackgroundCells.propTypes = {
-  date: PropTypes.instanceOf(Date),
-  getNow: PropTypes.func.isRequired,
-
-  getters: PropTypes.object.isRequired,
-  components: PropTypes.object.isRequired,
-
-  container: PropTypes.func,
-  dayPropGetter: PropTypes.func,
-  selectable: PropTypes.oneOf([true, false, 'ignoreEvents']),
-  longPressThreshold: PropTypes.number,
-
-  onSelectSlot: PropTypes.func.isRequired,
-  onSelectEnd: PropTypes.func,
-  onSelectStart: PropTypes.func,
-
-  range: PropTypes.arrayOf(PropTypes.instanceOf(Date)),
-  rtl: PropTypes.bool,
-  type: PropTypes.string,
-  resourceId: PropTypes.any,
-
-  localizer: PropTypes.any,
 }
 
 export default BackgroundCells

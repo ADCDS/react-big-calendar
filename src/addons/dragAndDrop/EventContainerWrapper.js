@@ -232,6 +232,8 @@ class EventContainerWrapper extends React.Component {
               anchorDirection.toUpperCase()
             )
           }
+
+          break;
         }
       }
 
