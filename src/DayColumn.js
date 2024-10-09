@@ -320,7 +320,6 @@ class DayColumn extends React.Component {
       selector.on('beforeSelect', (box) => {
         if (!isEvent(this.containerRef.current, box)) {
           // Targeted a timecell
-          console.log("Clicked a timecell");
           return { timeCell: true }
         } else {
           if(this.props.selectable !== 'ignoreEvents') {
@@ -332,13 +331,21 @@ class DayColumn extends React.Component {
     )
 
     this._removeListeners.push(
-      selector.on('click', (box) => selectorClicksHandler(box, 'click'))
+      selector.on('click', (box) => {
+        const nodeBounds = getBoundsForNode(node)
+        if (!pointInBox(nodeBounds, box)) return
+
+        selectorClicksHandler(box, 'click')
+      })
     )
 
     this._removeListeners.push(
-      selector.on('doubleClick', (box) =>
+      selector.on('doubleClick', (box) => {
+        const nodeBounds = getBoundsForNode(node)
+        if (!pointInBox(nodeBounds, box)) return
+
         selectorClicksHandler(box, 'doubleClick')
-      )
+      })
     )
 
     this._removeListeners.push(

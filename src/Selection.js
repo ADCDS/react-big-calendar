@@ -208,6 +208,7 @@ class Selection {
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
       // console.log("touchstart")
       this._onlyTouch = true;
+      this._lastEventCoordinates = getEventCoordinates(e);
       this._handleTouchStart(e);
     });
 

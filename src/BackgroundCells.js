@@ -151,13 +151,21 @@ class BackgroundCells extends React.Component {
     )
 
     this._removeListeners.push(
-      selector.on('click', (point) => selectorClicksHandler(point, 'click'))
+      selector.on('click', (point) => {
+        const nodeBounds = getBoundsForNode(node)
+        if (!pointInBox(nodeBounds, point)) return
+
+        selectorClicksHandler(point, 'click')
+      })
     )
 
     this._removeListeners.push(
-      selector.on('doubleClick', (point) =>
+      selector.on('doubleClick', (point) => {
+        const nodeBounds = getBoundsForNode(node)
+        if (!pointInBox(nodeBounds, point)) return
+
         selectorClicksHandler(point, 'doubleClick')
-      )
+      })
     )
 
     this._removeListeners.push(
