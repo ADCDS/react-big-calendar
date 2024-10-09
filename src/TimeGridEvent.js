@@ -91,12 +91,13 @@ function TimeGridEvent(props) {
     })
 
     const removeClickListener = selector.on('click', (point, e) => {
-      if(isOnPoint.current || e.type === "mouseup" /*Mouse left long-click should not trigger ctx menu*/) {
-        calendarContext.onSelectEvent && notify(calendarContext.onSelectEvent, [eventRef.current, e])
-      }
+      const nodeBounds = getBoundsForNode(node)
+      if (!pointInBox(nodeBounds, point)) return
 
-      clearTimeout(longPressTimer.current);
-      isOnPoint.current = false;
+      calendarContext.onSelectEvent && notify(calendarContext.onSelectEvent, [eventRef.current, e, {dryRun: e.type === "touchend"}])
+
+      clearTimeout(longPressTimer.current)
+      isOnPoint.current = false
     })
 
     // Handle context menu (right-click) events
