@@ -1,12 +1,15 @@
+import React, { useEffect, useRef, useContext } from 'react'
 import clsx from 'clsx'
-import React, { useState, useContext } from 'react'
-import CalendarContext from './CalendarContext' // Assuming you have a CalendarContext
+import { DnDContext } from './addons/dragAndDrop/DnDContext'
+import CalendarContext from './CalendarContext'
+import { getBoundsForNode } from './Selection'
+import { pointInBox } from './utils/selection'
+import { notify } from './utils/helpers' // Assuming you have a CalendarContext
 
 function stringifyPercent(v) {
   return typeof v === 'string' ? v : v + '%'
 }
 
-/* eslint-disable react/prop-types */
 function TimeGridEvent(props) {
   const {
     style,
@@ -19,32 +22,30 @@ function TimeGridEvent(props) {
     continuesPrior,
     continuesAfter,
     getters,
-    onPointerDown,
     isBackgroundEvent,
-    onKeyPress,
-    components: { event: Event, eventWrapper: EventWrapper },
+    components: { event: EventComponent, eventWrapper: EventWrapper }
   } = props
 
-  const calendarContext = useContext(CalendarContext) // Use the context
-  const [pointerDownTimeout, setPointerDownTimeout] = useState(null)
-  const [lastTap, setLastTap] = useState(0) // To store the timestamp of the last tap
-  const [isTouchEvent, setIsTouchEvent] = useState(false) // To track if it's a touch event
+  const nodeRef = useRef(null)
+  const eventRef = useRef(event);
 
-  let title = accessors.title(event)
-  let tooltip = accessors.tooltip(event)
-  let end = accessors.end(event)
-  let start = accessors.start(event)
+  useEffect(() => {
+    eventRef.current =  event
+  }, [event]);
 
-  let userProps = getters.eventProp(event, start, end, selected)
+  const calendarContext = useContext(CalendarContext)
+  const dragContext = useContext(DnDContext)
+  const selector = dragContext?.draggable?.selector
 
-  const inner = [
-    <div key="1" className="rbc-event-label">
-      {label}
-    </div>,
-    <div key="2" className="rbc-event-content">
-      {Event ? <Event event={event} title={title} /> : title}
-    </div>,
-  ]
+  const title = accessors.title(event)
+  const tooltip = accessors.tooltip(event)
+  const end = accessors.end(event)
+  const start = accessors.start(event)
+
+  const isOnPoint = useRef(false);
+  const longPressTimer = useRef(null) // Store the long-press timer
+
+  const userProps = getters.eventProp(event, start, end, selected)
 
   const { height, top, width, xOffset } = style
 
@@ -56,79 +57,86 @@ function TimeGridEvent(props) {
     [rtl ? 'right' : 'left']: stringifyPercent(xOffset),
   }
 
-  // Handle pointer down and hold for touch devices
-  const handlePointerDown = (e) => {
-    setIsTouchEvent(e.pointerType === 'touch')
+  useEffect(() => {
+    if (!nodeRef.current || !selector) return
 
-    if (e.pointerType === 'touch') {
-      const timeout = setTimeout(() => {
-        setPointerDownTimeout(null)
-        // Trigger context menu action on long press
-        if (calendarContext.onEventContextMenu) {
-          calendarContext.onEventContextMenu(event, e)
-        }
-      }, 800) // Long press detection timeout (800ms)
+    const node = nodeRef.current
 
-      setPointerDownTimeout(timeout)
-    } else {
-      // Shorter timeout for non-touch devices
-      const timeout = setTimeout(() => {
-        setPointerDownTimeout(null)
-      }, 200)
+    // Handle click events
+    const removeBeforeSelectListener = selector.on('beforeSelect', (point, e) => {
+      const nodeBounds = getBoundsForNode(node)
+      if (!pointInBox(nodeBounds, point)) return
 
-      setPointerDownTimeout(timeout)
-    }
-  }
-
-  const handlePointerUp = (e) => {
-    // If the timeout is still active, it means the user released quickly (i.e., clicked)
-    if (pointerDownTimeout) {
-      clearTimeout(pointerDownTimeout)
-      setPointerDownTimeout(null)
-
-      if (isTouchEvent) {
-        const currentTime = new Date().getTime()
-        const tapGap = currentTime - lastTap
-
-        if (tapGap < 300 && tapGap > 0) {
-          // If a double-tap is detected (within 300ms), trigger onPointerDown
-          if (onPointerDown) {
-            onPointerDown(e)
-          }
-        } else {
-          onPointerDown(e, { dryRun: true }) // Select the event without interaction
-        }
-
-        setLastTap(currentTime)
-      } else {
-        // For non-touch devices (mouse), trigger onPointerDown immediately
-        if (onPointerDown) {
-          onPointerDown(e)
-        }
+      /*Mouse left long-click should not trigger ctx menu*/
+      if(e.type !== "mousedown") {
+        longPressTimer.current = setTimeout(() => {
+          handleContextMenu(e) // Trigger context menu after 800ms
+        }, 800)
       }
-    } else {
-      onPointerDown && onPointerDown(e, { dryRun: true }) // Select the event on touch-drag-move
-    }
-  }
 
-  const handlePointerLeave = () => {
-    if (pointerDownTimeout) {
-      clearTimeout(pointerDownTimeout)
-      setPointerDownTimeout(null)
+      isOnPoint.current = true;
+    })
+
+
+    const removeSelectingListener = selector.on('selecting', (point, e) => {
+      clearTimeout(longPressTimer.current)
+    })
+
+    const removeOnEndListener = selector.on('endMove', (point, e) => {
+      if(isOnPoint.current) {
+        calendarContext.onSelectEvent && notify(calendarContext.onSelectEvent, [eventRef.current, e, { dryRun: true }])
+      }
+
+      isOnPoint.current = false;
+    })
+
+    const removeClickListener = selector.on('click', (point, e) => {
+      if(isOnPoint.current || e.type === "mouseup" /*Mouse left long-click should not trigger ctx menu*/) {
+        calendarContext.onSelectEvent && notify(calendarContext.onSelectEvent, [eventRef.current, e])
+      }
+
+      clearTimeout(longPressTimer.current);
+      isOnPoint.current = false;
+    })
+
+    // Handle context menu (right-click) events
+    const handleContextMenu = (e) => {
+      isOnPoint.current = false; // Avoid triggering endMove handler if we tap-and-hold
+      e.preventDefault();
+      calendarContext.onEventContextMenu && calendarContext.onEventContextMenu(event, e)
     }
-  }
+
+    node.addEventListener('contextmenu', handleContextMenu)
+
+    return () => {
+      removeBeforeSelectListener && removeBeforeSelectListener.remove()
+      removeClickListener && removeClickListener.remove()
+      removeSelectingListener && removeSelectingListener.remove()
+      removeOnEndListener && removeOnEndListener.remove()
+      node.removeEventListener('contextmenu', handleContextMenu)
+    }
+  }, [
+    selector,
+    nodeRef,
+    calendarContext.onSelectEvent,
+  ])
+
+  const inner = [
+    <div key="1" className="rbc-event-label">
+      {label}
+    </div>,
+    <div key="2" className="rbc-event-content">
+      {EventComponent ? <EventComponent event={event} title={title} /> : title}
+    </div>,
+  ]
 
   return (
     <EventWrapper type="time" {...props}>
       <div
+        ref={nodeRef}
         role="button"
         tabIndex={0}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
-        onContextMenu={calendarContext.onEventContextMenu}
         style={eventStyle}
-        onKeyDown={onKeyPress}
         title={
           tooltip
             ? (typeof label === 'string' ? label + ': ' : '') + tooltip

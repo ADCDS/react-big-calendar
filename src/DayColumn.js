@@ -236,22 +236,7 @@ class DayColumn extends React.Component {
           accessors={accessors}
           resource={this.props.resource}
           selected={isSelected(event, selected)}
-          onPointerDown={(e, ...args) =>
-            this._select(
-              {
-                ...event,
-                ...(this.props.resource && {
-                  sourceResource: this.props.resource,
-                }),
-                ...(isBackgroundEvent && { isBackgroundEvent: true }),
-              },
-              e,
-              ...args
-            )
-          }
-          onDoubleClick={(e) => this._doubleClick(event, e)}
           isBackgroundEvent={isBackgroundEvent}
-          onKeyPress={(e) => this._keyPress(event, e)}
           resizable={resizable}
         />
       )
@@ -429,18 +414,6 @@ class DayColumn extends React.Component {
       this._selectedSlots.push(current)
       current = new Date(+current + this.props.step * 60 * 1000) // using Date ensures not to create an endless loop the day DST begins
     }
-  }
-
-  _select = (...args) => {
-    notify(this.props.onSelectEvent, args)
-  }
-
-  _doubleClick = (...args) => {
-    notify(this.props.onDoubleClickEvent, args)
-  }
-
-  _keyPress = (...args) => {
-    notify(this.props.onKeyPressEvent, args)
   }
 }
 

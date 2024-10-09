@@ -361,8 +361,6 @@ class InnerCalendar extends React.Component {
      */
     onSelectEvent: PropTypes.func,
 
-    onEventContextMenu: PropTypes.func,
-
     /**
      * Callback fired when a calendar event is clicked twice.
      *
@@ -1040,7 +1038,8 @@ class InnerCalendar extends React.Component {
 
     return (
       <CalendarContext.Provider value={{
-        onEventContextMenu: this.props.onEventContextMenu
+        onEventContextMenu: this.props.onEventContextMenu,
+        onSelectEvent: this.props.onSelectEvent
       }}>
         <div
           {...elementProps}

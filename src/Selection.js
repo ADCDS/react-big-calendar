@@ -262,7 +262,7 @@ class Selection {
     this._isHolding = false;
 
     if (!this.selecting && this._initialEventData) {
-      this.emit('click', this._initialEventData)
+      this.emit('click', this._initialEventData, e)
     } else {
       this.selecting = false;
 
@@ -274,7 +274,7 @@ class Selection {
         eventCoordinates = this._lastEventCoordinates;
       }
 
-      this.emit('endMove', eventCoordinates)
+      this.emit('endMove', eventCoordinates, e)
     }
 
     this._removeEndListener && this._removeEndListener();
@@ -377,36 +377,6 @@ class Selection {
     return containers.some((target) => !!eventTarget.closest(target))
   }
 
-  _handleClickEvent(e) {
-    const { pageX, pageY, clientX, clientY } = getEventCoordinates(e)
-    const now = new Date().getTime()
-
-    if (
-      this._lastClickData &&
-      now - this._lastClickData.timestamp < clickInterval
-    ) {
-      // Double click event
-      this._lastClickData = null
-      return this.emit('doubleClick', {
-        x: pageX,
-        y: pageY,
-        clientX: clientX,
-        clientY: clientY,
-      })
-    }
-
-    // Click event
-    this._lastClickData = {
-      timestamp: now,
-    }
-    return this.emit('click', {
-      x: pageX,
-      y: pageY,
-      clientX: clientX,
-      clientY: clientY,
-    })
-  }
-
   _handleMoveEvent(e) {
     if (!this._initialEventData || this.isDetached) {
       // console.log('Leaving 1', {
@@ -445,7 +415,7 @@ class Selection {
         bottom: top + h,
       }
 
-      this.emit('selecting', this._selectRect)
+      this.emit('selecting', this._selectRect, e)
       e.preventDefault();
     }
   }
