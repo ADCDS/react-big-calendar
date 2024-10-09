@@ -39,7 +39,7 @@ class EventWrapper extends React.Component {
     const { draggable } = this.context
 
     // console.log('###EVENT_WRAPPER_RENDER', { draggable })
-    const { event, type, continuesPrior, continuesAfter, resizable, onContextMenu } =
+    const { event, type, continuesPrior, continuesAfter, resizable } =
       this.props
 
     let { children } = this.props
@@ -88,13 +88,6 @@ class EventWrapper extends React.Component {
      */
     const isResizable =
       resizable && (resizableAccessor ? !!get(event, resizableAccessor) : true)
-
-
-    if(onContextMenu) {
-      children = React.cloneElement(children, {
-          onContextMenu
-      })
-    }
 
     if (isResizable || isDraggable) {
       /*

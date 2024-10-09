@@ -21,7 +21,7 @@ class EventCell extends React.Component {
       this.pointerDownTimeout = setTimeout(() => {
         this.pointerDownTimeout = null
         // Trigger the context menu callback (printing "lancha") on touch-and-hold
-        this.context.onContextMenu && this.context.onContextMenu(e)
+        this.context.onEventContextMenu && this.context.onEventContextMenu(e)
       }, 800) // 800ms for long press detection
     } else {
       // For non-touch devices, use a shorter timeout for click detection
@@ -136,7 +136,7 @@ class EventCell extends React.Component {
             'rbc-event-continues-prior': continuesPrior,
             'rbc-event-continues-after': continuesAfter,
           })}
-          onContextMenu={this.context.onContextMenu}
+          onContextMenu={this.context.onEventContextMenu}
           onPointerDown={(e) => this.handlePointerDown(event, e)}
           onPointerUp={(e) => this.handlePointerUp(event, e)}
           onPointerLeave={this.handlePointerLeave}

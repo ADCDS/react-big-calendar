@@ -290,7 +290,7 @@ class InnerCalendar extends React.Component {
      */
     onNavigate: PropTypes.func,
 
-    onContextMenu: PropTypes.func,
+    onEventContextMenu: PropTypes.func,
 
     /**
      * Callback fired when the `view` value changes.
@@ -1040,7 +1040,7 @@ class InnerCalendar extends React.Component {
 
     return (
       <CalendarContext.Provider value={{
-        onContextMenu: this.props.onContextMenu
+        onEventContextMenu: this.props.onEventContextMenu
       }}>
         <div
           {...elementProps}

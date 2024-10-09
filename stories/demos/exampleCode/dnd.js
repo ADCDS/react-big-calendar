@@ -87,7 +87,7 @@ export default function DragAndDrop({ localizer }) {
           localizer={localizer}
           onEventDrop={moveEvent}
           onEventResize={resizeEvent}
-          onContextMenu={onContextMenu}
+          onEventContextMenu={onContextMenu}
           selectable={true}
           onSelectSlot={onSelectSlot}
           onSelectEvent={onSelectSlot}

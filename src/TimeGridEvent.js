@@ -64,8 +64,8 @@ function TimeGridEvent(props) {
       const timeout = setTimeout(() => {
         setPointerDownTimeout(null)
         // Trigger context menu action on long press
-        if (calendarContext.onContextMenu) {
-          calendarContext.onContextMenu(e)
+        if (calendarContext.onEventContextMenu) {
+          calendarContext.onEventContextMenu(e)
         }
       }, 800) // Long press detection timeout (800ms)
 
@@ -126,7 +126,7 @@ function TimeGridEvent(props) {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
-        onContextMenu={calendarContext.onContextMenu}
+        onContextMenu={calendarContext.onEventContextMenu}
         style={eventStyle}
         onKeyDown={onKeyPress}
         title={
