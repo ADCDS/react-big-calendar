@@ -24,6 +24,7 @@ import defaults from 'lodash/defaults'
 import transform from 'lodash/transform'
 import mapValues from 'lodash/mapValues'
 import { wrapAccessor } from './utils/accessors'
+import CalendarContext from './CalendarContext'
 
 function viewNames(_views) {
   if (Array.isArray(_views)) {
@@ -288,6 +289,8 @@ class InnerCalendar extends React.Component {
      * @controllable date
      */
     onNavigate: PropTypes.func,
+
+    onContextMenu: PropTypes.func,
 
     /**
      * Callback fired when the `view` value changes.
@@ -1036,46 +1039,50 @@ class InnerCalendar extends React.Component {
     const label = View.title(current, { localizer, length })
 
     return (
-      <div
-        {...elementProps}
-        className={clsx(className, 'rbc-calendar', props.rtl && 'rbc-rtl')}
-        style={style}
-        ref={this.props.innerRef}
-      >
-        {toolbar && (
-          <CalToolbar
+      <CalendarContext.Provider value={{
+        onContextMenu: this.props.onContextMenu
+      }}>
+        <div
+          {...elementProps}
+          className={clsx(className, 'rbc-calendar', props.rtl && 'rbc-rtl')}
+          style={style}
+          ref={this.props.innerRef}
+        >
+          {toolbar && (
+            <CalToolbar
+              date={current}
+              view={view}
+              views={viewNames}
+              label={label}
+              onView={this.handleViewChange}
+              onNavigate={this.handleNavigate}
+              localizer={localizer}
+            />
+          )}
+          <View
+            {...props}
+            events={events}
+            backgroundEvents={backgroundEvents}
             date={current}
-            view={view}
-            views={viewNames}
-            label={label}
-            onView={this.handleViewChange}
-            onNavigate={this.handleNavigate}
+            getNow={getNow}
+            length={length}
             localizer={localizer}
+            getters={getters}
+            components={components}
+            accessors={accessors}
+            showMultiDayTimes={showMultiDayTimes}
+            getDrilldownView={this.getDrilldownView}
+            onNavigate={this.handleNavigate}
+            onDrillDown={this.handleDrillDown}
+            onSelectEvent={this.handleSelectEvent}
+            onDoubleClickEvent={this.handleDoubleClickEvent}
+            onKeyPressEvent={this.handleKeyPressEvent}
+            onSelectSlot={this.handleSelectSlot}
+            onShowMore={onShowMore}
+            doShowMoreDrillDown={doShowMoreDrillDown}
           />
-        )}
-        <View
-          {...props}
-          events={events}
-          backgroundEvents={backgroundEvents}
-          date={current}
-          getNow={getNow}
-          length={length}
-          localizer={localizer}
-          getters={getters}
-          components={components}
-          accessors={accessors}
-          showMultiDayTimes={showMultiDayTimes}
-          getDrilldownView={this.getDrilldownView}
-          onNavigate={this.handleNavigate}
-          onDrillDown={this.handleDrillDown}
-          onSelectEvent={this.handleSelectEvent}
-          onDoubleClickEvent={this.handleDoubleClickEvent}
-          onKeyPressEvent={this.handleKeyPressEvent}
-          onSelectSlot={this.handleSelectSlot}
-          onShowMore={onShowMore}
-          doShowMoreDrillDown={doShowMoreDrillDown}
-        />
-      </div>
+        </div>
+      </CalendarContext.Provider>
     )
   }
 

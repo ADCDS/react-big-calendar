@@ -244,6 +244,10 @@ class EventContainerWrapper extends React.Component {
         const bounds = getBoundsForNode(node)
         const { dragAndDropAction } = this.context.draggable
 
+        if(!dragAndDropAction.actuallyMoved) {
+          this.context.draggable.onInitialMove();
+        }
+
         if (dragAndDropAction.action === 'move') {
           this.updateParentScroll(parent, node)
           this.handleMove(box, bounds)

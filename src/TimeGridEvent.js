@@ -1,5 +1,6 @@
 import clsx from 'clsx'
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
+import CalendarContext from './CalendarContext' // Assuming you have a CalendarContext
 
 function stringifyPercent(v) {
   return typeof v === 'string' ? v : v + '%'
@@ -24,8 +25,10 @@ function TimeGridEvent(props) {
     components: { event: Event, eventWrapper: EventWrapper },
   } = props
 
+  const calendarContext = useContext(CalendarContext) // Use the context
   const [pointerDownTimeout, setPointerDownTimeout] = useState(null)
   const [lastTap, setLastTap] = useState(0) // To store the timestamp of the last tap
+  const [isTouchEvent, setIsTouchEvent] = useState(false) // To track if it's a touch event
 
   let title = accessors.title(event)
   let tooltip = accessors.tooltip(event)
@@ -53,23 +56,37 @@ function TimeGridEvent(props) {
     [rtl ? 'right' : 'left']: stringifyPercent(xOffset),
   }
 
-  // Handle pointer down and hold
+  // Handle pointer down and hold for touch devices
   const handlePointerDown = (e) => {
-    const timeout = setTimeout(() => {
-      setPointerDownTimeout(null)
-    }, 200) // Timeout to distinguish click from hold (200ms)
+    setIsTouchEvent(e.pointerType === 'touch')
 
-    setPointerDownTimeout(timeout)
+    if (e.pointerType === 'touch') {
+      const timeout = setTimeout(() => {
+        setPointerDownTimeout(null)
+        // Trigger context menu action on long press
+        if (calendarContext.onContextMenu) {
+          calendarContext.onContextMenu(e)
+        }
+      }, 800) // Long press detection timeout (800ms)
+
+      setPointerDownTimeout(timeout)
+    } else {
+      // Shorter timeout for non-touch devices
+      const timeout = setTimeout(() => {
+        setPointerDownTimeout(null)
+      }, 200)
+
+      setPointerDownTimeout(timeout)
+    }
   }
 
   const handlePointerUp = (e) => {
-    // console.log("TimeGridEvent handlePointerUp")
-
+    // If the timeout is still active, it means the user released quickly (i.e., clicked)
     if (pointerDownTimeout) {
       clearTimeout(pointerDownTimeout)
       setPointerDownTimeout(null)
 
-      if (e.pointerType === 'touch') {
+      if (isTouchEvent) {
         const currentTime = new Date().getTime()
         const tapGap = currentTime - lastTap
 
@@ -79,7 +96,7 @@ function TimeGridEvent(props) {
             onPointerDown(e)
           }
         } else {
-          onPointerDown(e, {dryRun: true})
+          onPointerDown(e, { dryRun: true }) // Select the event without interaction
         }
 
         setLastTap(currentTime)
@@ -90,7 +107,7 @@ function TimeGridEvent(props) {
         }
       }
     } else {
-      onPointerDown(e, {dryRun: true}) // This makes the event to get selected when user touch-drag-moves it
+      onPointerDown && onPointerDown(e, { dryRun: true }) // Select the event on touch-drag-move
     }
   }
 
@@ -109,6 +126,7 @@ function TimeGridEvent(props) {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerLeave}
+        onContextMenu={calendarContext.onContextMenu}
         style={eventStyle}
         onKeyDown={onKeyPress}
         title={

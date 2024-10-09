@@ -11,6 +11,7 @@ class EventWrapper extends React.Component {
     type: PropTypes.oneOf(['date', 'time']),
     event: PropTypes.object.isRequired,
 
+    onContextMenu: PropTypes.func,
     draggable: PropTypes.bool,
     allDay: PropTypes.bool,
     isRow: PropTypes.bool,
@@ -38,7 +39,7 @@ class EventWrapper extends React.Component {
     const { draggable } = this.context
 
     // console.log('###EVENT_WRAPPER_RENDER', { draggable })
-    const { event, type, continuesPrior, continuesAfter, resizable } =
+    const { event, type, continuesPrior, continuesAfter, resizable, onContextMenu } =
       this.props
 
     let { children } = this.props
@@ -88,6 +89,13 @@ class EventWrapper extends React.Component {
     const isResizable =
       resizable && (resizableAccessor ? !!get(event, resizableAccessor) : true)
 
+
+    if(onContextMenu) {
+      children = React.cloneElement(children, {
+          onContextMenu
+      })
+    }
+
     if (isResizable || isDraggable) {
       /*
        * props.children is the singular <Event> component.
@@ -122,7 +130,8 @@ class EventWrapper extends React.Component {
 
       if (
         draggable.dragAndDropAction.interacting && // if an event is being dragged right now
-        draggable.dragAndDropAction.event === event // and it's the current event
+        draggable.dragAndDropAction.event === event && // and it's the current event
+        draggable.dragAndDropAction.actuallyMoved // and it actually moved
       ) {
         // add a new class to it
         newProps.className = clsx(

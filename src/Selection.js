@@ -49,13 +49,12 @@ const clickInterval = 250
 class Selection {
   constructor(
     node,
-    { global = false, longPressThreshold = 250, validContainers = [] } = {}
+    { global = false, validContainers = [] } = {}
   ) {
     this.selecting = false
     this.isDetached = false
     this.container = node
     this.globalMouse = !node || global
-    this.longPressThreshold = longPressThreshold
     this.validContainers = validContainers
 
     this._listeners = Object.create(null)
@@ -99,8 +98,7 @@ class Selection {
 
     const listener = {
       _fn: handler,
-      options,
-      active: true  // Add an `active` flag to the handler
+      options
     }
 
     handlers.push(listener)
@@ -168,50 +166,6 @@ class Selection {
     if (!box || !this.selecting) return []
 
     return items.filter(this.isSelected, this)
-  }
-
-  // Adds a listener that will call the handler only after the user has pressed on the screen
-  // without moving their finger for 250ms.
-  _addLongPressListener(handler, initialEvent) {
-    let timer = null
-    let removeTouchMoveListener = null
-    let removeTouchEndListener = null
-    const handleTouchStart = (initialEvent) => {
-      timer = setTimeout(() => {
-        cleanup()
-        handler(initialEvent)
-      }, this.longPressThreshold)
-      removeTouchMoveListener = addEventListener('touchmove', () => cleanup())
-      removeTouchEndListener = addEventListener('touchend', () => cleanup())
-    }
-    const removeTouchStartListener = addEventListener(
-      'touchstart',
-      handleTouchStart
-    )
-    const cleanup = () => {
-      if (timer) {
-        clearTimeout(timer)
-      }
-      if (removeTouchMoveListener) {
-        removeTouchMoveListener()
-      }
-      if (removeTouchEndListener) {
-        removeTouchEndListener()
-      }
-
-      timer = null
-      removeTouchMoveListener = null
-      removeTouchEndListener = null
-    }
-
-    if (initialEvent) {
-      handleTouchStart(initialEvent)
-    }
-
-    return () => {
-      cleanup()
-      removeTouchStartListener()
-    }
   }
 
   // Detect double-tap-and-hold gesture

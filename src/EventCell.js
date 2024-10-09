@@ -1,30 +1,44 @@
 import PropTypes from 'prop-types'
 import React from 'react'
 import clsx from 'clsx'
+import CalendarContext from './CalendarContext'
 
 class EventCell extends React.Component {
+  static contextType = CalendarContext;
+
   constructor(props) {
     super(props)
     this.pointerDownTimeout = null
     this.lastTap = 0 // to store the timestamp of the last tap on touch devices
+    this.isTouchEvent = false // flag to track if it's a touch event
   }
 
   handlePointerDown = (event, e) => {
-    // Start a timeout to detect if the user holds the click/touch for too long
-    this.pointerDownTimeout = setTimeout(() => {
-      this.pointerDownTimeout = null // Clear timeout if the user holds down
-    }, 200) // 200ms is a typical threshold for distinguishing a click from a hold
+    this.isTouchEvent = e.pointerType === 'touch'
+
+    if (this.isTouchEvent) {
+      // Start a timeout for touch-and-hold to trigger the context menu callback
+      this.pointerDownTimeout = setTimeout(() => {
+        this.pointerDownTimeout = null
+        // Trigger the context menu callback (printing "lancha") on touch-and-hold
+        this.context.onContextMenu && this.context.onContextMenu(e)
+      }, 800) // 800ms for long press detection
+    } else {
+      // For non-touch devices, use a shorter timeout for click detection
+      this.pointerDownTimeout = setTimeout(() => {
+        this.pointerDownTimeout = null // Clear timeout if the user holds down
+      }, 200) // 200ms is typical for distinguishing a click from a hold
+    }
   }
 
   handlePointerUp = (event, e) => {
-    // console.log("EventCell handlePointerUp");
     // If the timeout is still active, it means the user released quickly (i.e., clicked)
     if (this.pointerDownTimeout) {
       clearTimeout(this.pointerDownTimeout)
       this.pointerDownTimeout = null
 
-      // Check pointer type to differentiate between touch and mouse
-      if (e.pointerType === 'touch') {
+      // For touch events, handle tap and double-tap logic
+      if (this.isTouchEvent) {
         const currentTime = new Date().getTime()
         const tapGap = currentTime - this.lastTap
 
@@ -34,19 +48,18 @@ class EventCell extends React.Component {
             this.props.onSelect(event, e)
           }
         } else {
-          this.props.onSelect(event, e, {dryRun: true}) // Just selects the event to display the interactive buttons
+          this.props.onSelect(event, e, { dryRun: true }) // Select event to display interactive buttons
         }
 
         this.lastTap = currentTime // Update lastTap time
-
       } else {
-        // For non-touch devices (mouse), trigger onSelect immediately
+        // For non-touch devices, trigger onSelect immediately
         if (this.props.onSelect) {
           this.props.onSelect(event, e)
         }
       }
     } else {
-      this.props.onSelect(event, e, {dryRun: true}) // This makes the event to get selected when user touch-drag-moves it
+      this.props.onSelect(event, e, { dryRun: true }) // Select event for touch-drag-move
     }
   }
 
@@ -123,6 +136,7 @@ class EventCell extends React.Component {
             'rbc-event-continues-prior': continuesPrior,
             'rbc-event-continues-after': continuesAfter,
           })}
+          onContextMenu={this.context.onContextMenu}
           onPointerDown={(e) => this.handlePointerDown(event, e)}
           onPointerUp={(e) => this.handlePointerUp(event, e)}
           onPointerLeave={this.handlePointerLeave}

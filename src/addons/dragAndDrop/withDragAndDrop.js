@@ -52,6 +52,7 @@ export default function withDragAndDrop(Calendar) {
           onStart: this.handleInteractionStart,
           onEnd: this.handleInteractionEnd,
           onBeginAction: this.handleBeginAction,
+          onInitialMove: this.handleInitialMove,
           onDropFromOutside: this.props.onDropFromOutside,
           dragFromOutsideItem: this.props.dragFromOutsideItem,
           setEventOrigin: this.setEventOrigin,
@@ -70,6 +71,10 @@ export default function withDragAndDrop(Calendar) {
       this.setState({ event, action, direction })
       const { onDragStart } = this.props
       if (onDragStart) onDragStart({ event, action, direction })
+    }
+
+    handleInitialMove = () => {
+      this.setState(prev => ({ ...prev, actuallyMoved: true }))
     }
 
     handleInteractionStart = () => {
@@ -92,6 +97,7 @@ export default function withDragAndDrop(Calendar) {
         event: null,
         interacting: false,
         direction: null,
+        actuallyMoved: false
       })
 
       if (interactionInfo == null) return
@@ -111,6 +117,7 @@ export default function withDragAndDrop(Calendar) {
       props.selectable = selectable ? 'ignoreEvents' : false
 
       this.components = mergeComponents(components, {
+        eventWrapper: EventWrapper,
         eventContainerWrapper: EventContainerWrapper,
         weekWrapper: WeekWrapper,
       })

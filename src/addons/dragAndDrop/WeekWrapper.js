@@ -186,6 +186,10 @@ class WeekWrapper extends React.Component {
         const bounds = getBoundsForNode(node)
         const { dragAndDropAction } = this.context.draggable
 
+        if(!dragAndDropAction.actuallyMoved) {
+          this.context.draggable.onInitialMove();
+        }
+
         if (!isInBox && this.props.isAllDay) return
         if (dragAndDropAction.action === 'move') {
           this.handleMove(box, bounds)
