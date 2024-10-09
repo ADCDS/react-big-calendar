@@ -69,7 +69,10 @@ export default function DragAndDrop({ localizer }) {
   }, [])
 
   const defaultDate = useMemo(() => new Date(2015, 3, 13), [])
-  let onContextMenu = () => console.log("ele giggling")
+  let onContextMenu = (event, e) => {
+    e.preventDefault();
+    console.log("onContextMenu", {event});
+  }
 
   return (
     <Fragment>
