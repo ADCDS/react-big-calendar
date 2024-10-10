@@ -300,21 +300,6 @@ class DayColumn extends React.Component {
       this.setState({ selecting: false })
     }
 
-    // Storing cleanup functions returned by `selector.on`
-    this._removeListeners.push(
-      selector.on('beforeSelect', (box) => {
-        if (!isEvent(this.containerRef.current, box)) {
-          // Targeted a timecell
-          return { timeCell: true }
-        } else {
-          if(this.props.selectable !== 'ignoreEvents') {
-          // Targeted an event
-          return true // Avoid calling WeekWrappers beforeSelect
-          }
-        }
-      })
-    )
-
     this._removeListeners.push(
       selector.on('click', (box) => {
         const nodeBounds = getBoundsForNode(node)

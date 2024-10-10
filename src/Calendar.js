@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { uncontrollable } from 'uncontrollable'
 import clsx from 'clsx'
 import {
@@ -1005,6 +1005,13 @@ class InnerCalendar extends React.Component {
     return getDrilldownView(date, view, Object.keys(this.getViews()))
   }
 
+  getEventById(id) {
+    for (const event of this.props.events) {
+      if(event.id === id)
+        return event;
+    }
+  }
+
   render() {
     let {
       view,
@@ -1039,7 +1046,8 @@ class InnerCalendar extends React.Component {
     return (
       <CalendarContext.Provider value={{
         onEventContextMenu: this.props.onEventContextMenu,
-        onSelectEvent: this.props.onSelectEvent
+        onSelectEvent: this.props.onSelectEvent,
+        getEventById: this.getEventById
       }}>
         <div
           {...elementProps}

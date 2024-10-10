@@ -178,17 +178,17 @@ class EventContainerWrapper extends React.Component {
         isInDayColumn = pointInColumn(getBoundsForNode(node), point)
         const eventNode = getEventNodeFromPoint(node, point)
 
-        if (!eventNode) return false
+        if (!eventNode) return
         const eventOffsetTop = point.y - getBoundsForNode(eventNode).top
 
         if (this.context.draggable.dragAndDropAction.event) {
-          return { event: this.context.draggable.dragAndDropAction.event }
+          return
         }
 
         const { dragAndDropAction } = this.context.draggable
 
         if (dragAndDropAction.action === 'resize') {
-          return isInDayColumn
+          return
         }
 
         const events = this.props.children.props.children

@@ -141,7 +141,7 @@ class WeekWrapper extends React.Component {
         if (!isInBox) return
 
         const eventNode = getEventNodeFromPoint(node, point)
-        if (!eventNode) return false
+        if (!eventNode) return
 
         this.context.draggable.setEventOrigin(this)
 
@@ -176,8 +176,6 @@ class WeekWrapper extends React.Component {
             }
           }
         }
-
-        return true
       })
     )
 
