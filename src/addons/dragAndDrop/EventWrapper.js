@@ -9,19 +9,14 @@ import { pointInBox } from '../../utils/selection'
 import { notify } from '../../utils/helpers'
 
 function EventWrapper(props) {
-  const {
-    event,
-    type,
-    continuesPrior,
-    continuesAfter,
-    resizable,
-    children,
-  } = props
+  const { event, type, continuesPrior, continuesAfter, resizable, children } =
+    props
 
   const nodeRef = useRef(null)
   const eventId = useRef(null)
   const isOnPoint = useRef(false)
   const longPressTimer = useRef(null)
+  const lastTap = useRef(0)
 
   const dragContext = useContext(DnDContext)
   const selector = dragContext?.draggable?.selector
@@ -37,24 +32,28 @@ function EventWrapper(props) {
     const handleContextMenu = (e) => {
       isOnPoint.current = false // Avoid triggering endMove handler if we tap-and-hold
       e.preventDefault()
-      calendarContext.onEventContextMenu && calendarContext.onEventContextMenu(event, e)
+      calendarContext.onEventContextMenu &&
+        calendarContext.onEventContextMenu(event, e)
     }
 
     // Handle click events
-    const removeBeforeSelectListener = selector.on('beforeSelect', (point, e) => {
-      const nodeBounds = getBoundsForNode(node)
-      if (!pointInBox(nodeBounds, point)) return
+    const removeBeforeSelectListener = selector.on(
+      'beforeSelect',
+      (point, e) => {
+        const nodeBounds = getBoundsForNode(node)
+        if (!pointInBox(nodeBounds, point)) return
 
-      /* Mouse left long-click should not trigger context menu */
-      if (e.type !== 'mousedown') {
-        longPressTimer.current = setTimeout(() => {
-          handleContextMenu(e) // Trigger context menu after 800ms
-        }, 800)
+        /* Mouse left long-click should not trigger context menu */
+        if (e.type !== 'mousedown') {
+          longPressTimer.current = setTimeout(() => {
+            handleContextMenu(e) // Trigger context menu after 800ms
+          }, 800)
+        }
+
+        eventId.current = event.id
+        isOnPoint.current = true
       }
-
-      eventId.current = event.id
-      isOnPoint.current = true
-    })
+    )
 
     const removeSelectingListener = selector.on('selecting', () => {
       clearTimeout(longPressTimer.current)
@@ -63,7 +62,7 @@ function EventWrapper(props) {
     const removeOnEndListener = selector.on('endMove', (point, e) => {
       if (isOnPoint.current) {
         calendarContext.onSelectEvent &&
-        notify(calendarContext.onSelectEvent, [event, e, { dryRun: true }])
+          notify(calendarContext.onSelectEvent, [event, e, { dryRun: true }])
       }
 
       isOnPoint.current = false
@@ -73,12 +72,27 @@ function EventWrapper(props) {
       const nodeBounds = getBoundsForNode(node)
       if (!pointInBox(nodeBounds, point)) return
 
-      calendarContext.onSelectEvent &&
-      notify(calendarContext.onSelectEvent, [
-        event,
-        e,
-        { dryRun: e.type === 'touchend' },
-      ])
+      // Detect double tap for touch devices
+      if (e.type === 'touchend') {
+        const currentTime = new Date().getTime()
+        const tapLength = currentTime - lastTap.current
+
+        if (tapLength < 300 && tapLength > 0) {
+          // Double tap detected, trigger onSelectEvent with no dryRun
+          calendarContext.onSelectEvent &&
+            notify(calendarContext.onSelectEvent, [event, e, { dryRun: false }])
+        }
+
+        lastTap.current = currentTime
+      } else {
+        // Handle regular clicks or single tap on non-touch devices
+        calendarContext.onSelectEvent &&
+          notify(calendarContext.onSelectEvent, [
+            event,
+            e,
+            { dryRun: e.type === 'touchend' },
+          ])
+      }
 
       clearTimeout(longPressTimer.current)
       isOnPoint.current = false
