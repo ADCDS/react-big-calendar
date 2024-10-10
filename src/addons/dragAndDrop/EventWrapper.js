@@ -81,6 +81,9 @@ function EventWrapper(props) {
           // Double tap detected, trigger onSelectEvent with no dryRun
           calendarContext.onSelectEvent &&
             notify(calendarContext.onSelectEvent, [event, e, { dryRun: false }])
+        } else {
+          calendarContext.onSelectEvent &&
+          notify(calendarContext.onSelectEvent, [event, e, { dryRun: true }])
         }
 
         lastTap.current = currentTime

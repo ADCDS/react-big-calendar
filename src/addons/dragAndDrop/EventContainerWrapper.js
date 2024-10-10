@@ -302,7 +302,7 @@ class EventContainerWrapper extends React.Component {
         if (this.props.parentType === 'week') {
           draggableAreaNode = node.parentElement.parentElement.parentElement
         } else {
-          draggableAreaNode = node.parentElement
+          draggableAreaNode = node.parentElement.parentElement
         }
 
         const { clientX, clientY } = point

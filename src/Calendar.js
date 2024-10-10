@@ -635,6 +635,8 @@ class InnerCalendar extends React.Component {
      */
     enableAutoScroll: PropTypes.bool,
 
+    readyToRender: PropTypes.bool,
+
     /**
      * Specify a specific culture code for the Calendar.
      *
@@ -879,6 +881,7 @@ class InnerCalendar extends React.Component {
     step: 30,
     length: 30,
     allDayMaxRows: Infinity,
+    readyToRender: false,
 
     doShowMoreDrillDown: true,
     drilldownView: views.DAY,
@@ -1055,39 +1058,41 @@ class InnerCalendar extends React.Component {
           style={style}
           ref={this.props.innerRef}
         >
-          {toolbar && (
-            <CalToolbar
+          {this.props.readyToRender && <>
+            {toolbar && (
+              <CalToolbar
+                date={current}
+                view={view}
+                views={viewNames}
+                label={label}
+                onView={this.handleViewChange}
+                onNavigate={this.handleNavigate}
+                localizer={localizer}
+              />
+            )}
+            <View
+              {...props}
+              events={events}
+              backgroundEvents={backgroundEvents}
               date={current}
-              view={view}
-              views={viewNames}
-              label={label}
-              onView={this.handleViewChange}
-              onNavigate={this.handleNavigate}
+              getNow={getNow}
+              length={length}
               localizer={localizer}
+              getters={getters}
+              components={components}
+              accessors={accessors}
+              showMultiDayTimes={showMultiDayTimes}
+              getDrilldownView={this.getDrilldownView}
+              onNavigate={this.handleNavigate}
+              onDrillDown={this.handleDrillDown}
+              onSelectEvent={this.handleSelectEvent}
+              onDoubleClickEvent={this.handleDoubleClickEvent}
+              onKeyPressEvent={this.handleKeyPressEvent}
+              onSelectSlot={this.handleSelectSlot}
+              onShowMore={onShowMore}
+              doShowMoreDrillDown={doShowMoreDrillDown}
             />
-          )}
-          <View
-            {...props}
-            events={events}
-            backgroundEvents={backgroundEvents}
-            date={current}
-            getNow={getNow}
-            length={length}
-            localizer={localizer}
-            getters={getters}
-            components={components}
-            accessors={accessors}
-            showMultiDayTimes={showMultiDayTimes}
-            getDrilldownView={this.getDrilldownView}
-            onNavigate={this.handleNavigate}
-            onDrillDown={this.handleDrillDown}
-            onSelectEvent={this.handleSelectEvent}
-            onDoubleClickEvent={this.handleDoubleClickEvent}
-            onKeyPressEvent={this.handleKeyPressEvent}
-            onSelectSlot={this.handleSelectSlot}
-            onShowMore={onShowMore}
-            doShowMoreDrillDown={doShowMoreDrillDown}
-          />
+          </>}
         </div>
       </CalendarContext.Provider>
     )

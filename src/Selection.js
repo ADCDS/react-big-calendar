@@ -203,26 +203,26 @@ class Selection {
           this._handleInitialEvent
         )
       }
-    })
+    }, this.container)
 
     const removeTouchStartListener = addEventListener('touchstart', (e) => {
       // console.log("touchstart")
       this._onlyTouch = true;
       this._lastEventCoordinates = getEventCoordinates(e);
       this._handleTouchStart(e);
-    });
+    }, this.container);
 
     const removeTouchMoveListener = addEventListener('touchmove', (e) => {
       if(this._isHolding) {
         this._handleMoveEvent(e);
       }
-    });
+    }, this.container);
 
     const removeTouchEndListener = addEventListener('touchend', (e) => {
       if(this._isHolding) {
         this._handleEndMove(e);
       }
-    });
+    }, this.container);
 
     this._removeInitialEventListener = () => {
       removeMouseDownListener()
@@ -290,7 +290,7 @@ class Selection {
     }
 
     const { clientX, clientY, pageX, pageY } = getEventCoordinates(e)
-    let node = this.container(),
+    let node = this.container,
       collides,
       offsetData
 
@@ -343,11 +343,13 @@ class Selection {
       case 'mousedown':
         this._removeEndListener = addEventListener(
           'mouseup',
-          (e) => this._handleEndMove(e)
+          (e) => this._handleEndMove(e),
+          this.container
         )
         this._onEscListener = addEventListener(
           'keydown',
-          (e) => this._handleEndMove(e)
+          (e) => this._handleEndMove(e),
+          this.container
         )
         this._removeMoveListener = addEventListener(
           'mousemove',
@@ -356,7 +358,8 @@ class Selection {
             if (!this._onlyTouch && this.selecting) {
               this._handleMoveEvent(e)
             }
-          }
+          },
+          this.container
         )
         break
       default:
