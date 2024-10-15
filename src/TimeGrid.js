@@ -115,7 +115,7 @@ export default class TimeGrid extends Component {
     notify(onShowMore, [events, date, slot])
   }
 
-  handleSelectAllDaySlot = (slots, slotInfo) => {
+  handleSelectAllDaySlot = (slotInfo, slots) => {
     const { onSelectSlot } = this.props
 
     const start = new Date(slots[0])
@@ -296,7 +296,7 @@ export default class TimeGrid extends Component {
             className="rbc-time-gutter"
             getters={getters}
           />
-          <div className={"rbc-time-content"}>
+          <div className={'rbc-time-content'}>
             {this.renderEvents(
               range,
               rangeEvents,
