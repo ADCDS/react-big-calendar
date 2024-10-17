@@ -45,6 +45,7 @@ function getEventCoordinates(e) {
 
 const clickTolerance = 5
 const clickInterval = 250
+const moveThreshold = 15;
 
 class Selection {
   constructor(
@@ -400,6 +401,13 @@ class Selection {
       top = Math.min(pageY, y),
       old = this.selecting
     const click = this.isClick(pageX, pageY)
+
+    // Check if the move distance exceeds the threshold
+    if (Math.sqrt(w * w + h * h) < moveThreshold) {
+      // Movement is too small, so ignore it
+      return;
+    }
+
     // Prevent emitting selectStart event until mouse is moved.
     // in Chrome on Windows, mouseMove event may be fired just after mouseDown event.
     if (click && !old && !(w || h)) {
